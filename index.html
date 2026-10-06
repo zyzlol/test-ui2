@@ -38,7 +38,7 @@
     let mainColorRGB = hexToRgb(mainColor);
     let backColor = '#0b0b0f';
     let backColorRGB = hexToRgb(backColor);
-    backColorRGB.a = 0.95;
+    backColorRGB.a = 1.0;
 
     const lucideIconPaths = {
         user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />',
@@ -97,8 +97,8 @@
             font-family: sans-serif;
             color: white;
             position: fixed;
-            top: 21.5vh;
-            left: 14.25vh;
+            top: 12vh;
+            left: 7vh;
             width: 35vh;
             z-index: 1000;
             opacity: 0;
@@ -633,6 +633,21 @@
             font-weight: 500;
             display: flex;
             align-items: center;
+            gap: 0.4vh;
+        }
+
+        #footer-icon {
+            width: 1.3vh;
+            height: 1.3vh;
+            background: ${mainColor};
+            border-radius: 0.2vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85vh;
+            font-weight: 700;
+            color: ${backColor};
+            flex-shrink: 0;
         }
 
         #footer-right {
@@ -1317,7 +1332,7 @@
     menuRoot.innerHTML = `
         <div id="header-wrapper">
             <div id="menu-banner">
-                <img src="https://mayhemmenu.com/upload/assets/banner.png" alt="" id="banner-image" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(180deg, rgba(28,209,82,0.25) 0%, rgba(11,11,15,0.98) 100%)';this.parentElement.style.height='6vh';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';">
+                <img src="https://mayhemmenu.com/upload/assets/banner.png" alt="" id="banner-image" onerror="this.style.display='none';var p=this.parentElement;p.style.background='linear-gradient(135deg, rgba(28,209,82,0.15) 0%, rgba(11,11,15,1) 50%, rgba(28,209,82,0.08) 100%)';p.style.height='8vh';p.style.display='flex';p.style.alignItems='center';p.style.justifyContent='center';p.style.borderBottom='0.2vh solid rgba(28,209,82,0.3)';var t=document.createElement('span');t.textContent='MAYHEM';t.style.cssText='font-family:Poppins,sans-serif;font-weight:700;font-size:3vh;letter-spacing:0.5vh;color:rgba(28,209,82,0.6);text-shadow:0 0 2vh rgba(28,209,82,0.3)';p.appendChild(t);">
             </div>
             <div id="menu-tabs"></div>
         </div>
@@ -1333,7 +1348,7 @@
             </div>
         </div>
         <div id="menu-footer">
-            <span id="footer-left">Mayhem</span>
+            <span id="footer-left"><span id="footer-icon">M</span>Mayhem</span>
             <span id="footer-right">0/0</span>
         </div>
     `;
@@ -1890,7 +1905,7 @@
         if (setBackColor) {
             backColor = setBackColor;
             backColorRGB = hexToRgb(setBackColor);
-            backColorRGB.a = 0.95;
+            backColorRGB.a = 1.0;
         }
         
         const rootStyle = document.documentElement.style;
@@ -2795,6 +2810,17 @@
     window.buildMenu = function(config) {
         currentMenuConfig = config;
         const tabs = config.tabs || [{ label: 'Main', options: config.options || [] }];
+
+        // update footer text if provided (preserve the M icon)
+        if (config.footer) {
+            const footerLeft = document.getElementById('footer-left');
+            if (footerLeft) {
+                const icon = footerLeft.querySelector('#footer-icon');
+                footerLeft.textContent = '';
+                if (icon) footerLeft.appendChild(icon);
+                footerLeft.appendChild(document.createTextNode(config.footer));
+            }
+        }
 
         tabsContainer.innerHTML = '';
         if (tabs.length > 0) {
