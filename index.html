@@ -4386,6 +4386,8 @@
                 case 'watermark':      if (window.showWatermark)    window.showWatermark(); break;
                 case 'updateBanner':   if (window.updateMenuBanner) window.updateMenuBanner(d); break;
                 case 'updateSelection':if (window.updateSelection)  window.updateSelection(d.index != null ? d.index : 0); break;
+                case 'updateSlider':   if (window.updateSlider)     window.updateSlider(d.index != null ? d.index : 0, d.value != null ? d.value : 1); break;
+                case 'updateCheckbox': if (window.updateCheckbox)   window.updateCheckbox(d.index != null ? d.index : 0, !!d.checked); break;
                 case 'notify':
                 case 'notification':   if (window.showNotification) window.showNotification(d.setType || '', d.header || '', d.message || '', d.duration || 5000); break;
             }
