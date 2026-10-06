@@ -1,0 +1,4377 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mayhem</title><style>html,body{margin:0;padding:0;width:100%;height:100%;background:transparent;overflow:hidden;font-family:system-ui,Segoe UI,Roboto,sans-serif}</style></head><body><script>
+    (() => {
+        const preloadImages = [
+            'https://mayhemmenu.com/upload/assets/vehicleIcon.png',
+            'https://mayhemmenu.com/upload/assets/interiorIcon.png',
+            'https://mayhemmenu.com/upload/assets/walkingIcon.png'
+        ];
+
+        preloadImages.forEach(url => {
+            const img = new Image();
+            img.onload = async () => {
+                try {
+                    if ('decode' in img) await img.decode();
+                } catch (e) {}
+            };
+
+            img.onerror = () => {};
+            img.src = url;
+        });
+    })();
+
+    function hexToRgb(hex) {
+        hex = hex.replace(/^#/, '');
+
+        if (hex.length === 3) {
+            hex = hex.split('').map(c => c + c).join('');
+        }
+
+        const bigint = parseInt(hex, 16);
+        return {
+            r: (bigint >> 16) & 255,
+            g: (bigint >> 8) & 255,
+            b: bigint & 255
+        };
+    }
+
+    let mainColor = '#1cd152';
+    let mainColorRGB = hexToRgb(mainColor);
+    let backColor = '#0b0b0f';
+    let backColorRGB = hexToRgb(backColor);
+    backColorRGB.a = 0.8;
+
+    const lucideIconPaths = {
+        user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />',
+        globe: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/>',
+        crosshair: '<circle cx="12" cy="12" r="10" /><line x1="22" x2="18" y1="12" y2="12" /><line x1="6" x2="2" y1="12" y2="12" /><line x1="12" x2="12" y1="6" y2="2" /><line x1="12" x2="12" y1="22" y2="18" />',
+        swords: '<polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" /><line x1="13" x2="19" y1="19" y2="13" /><line x1="16" x2="20" y1="16" y2="20" /><line x1="19" x2="21" y1="21" y2="19" /><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5" /><line x1="5" x2="9" y1="14" y2="18" /><line x1="7" x2="4" y1="17" y2="20" /><line x1="3" x2="5" y1="19" y2="21" />',
+        car: '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" /><circle cx="7" cy="17" r="2" /><path d="M9 17h6" /><circle cx="17" cy="17" r="2" />',
+        wrench: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z" />',
+        ellipsis: '<circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />',
+        settings: '<path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/>',
+        'chevron-right': '<path d="m9 18 6-6-6-6" />',
+        keyboard: '<path d="M10 8h.01" /><path d="M12 12h.01" /><path d="M14 8h.01" /><path d="M16 12h.01" /><path d="M18 8h.01" /><path d="M6 8h.01" /><path d="M7 16h10" /><path d="M8 12h.01" /><rect width="20" height="16" x="2" y="4" rx="2" />',
+        users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><path d="M16 3.128a4 4 0 0 1 0 7.744" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><circle cx="9" cy="7" r="4" />',
+        shield: '<path d="M10 15H6a4 4 0 0 0-4 4v2"/><path d="M22 17.5c0 2.499-1.75 3.749-3.83 4.474a.5.5 0 0 1-.335-.005c-2.085-.72-3.835-1.97-3.835-4.47V14a.5.5 0 0 1 .5-.499c1 0 2.25-.6 3.12-1.36a.6.6 0 0 1 .76-.001c.875.765 2.12 1.36 3.12 1.36a.5.5 0 0 1 .5.5z"/><circle cx="9" cy="7" r="4"/>',
+        eye: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" />',
+        key: '<path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4" /><path d="m21 2-9.6 9.6" /><circle cx="7.5" cy="15.5" r="5.5" />',
+        clock: '<circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />',
+        activity: '<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2" />',
+        wifi: '<path d="M12 20h.01" /><path d="M2 8.82a15 15 0 0 1 20 0" /><path d="M5 12.859a10 10 0 0 1 14 0" /><path d="M8.5 16.429a5 5 0 0 1 7 0" />',
+        server: '<rect width="20" height="8" x="2" y="2" rx="2" ry="2" /><rect width="20" height="8" x="2" y="14" rx="2" ry="2" /><line x1="6" x2="6.01" y1="6" y2="6" /><line x1="6" x2="6.01" y1="18" y2="18" />',
+        serverBin: '<rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/>',
+        folder: '<path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/>',
+        calendar: '<path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" />'
+    };
+
+    function lucideIconSvg(name) {
+        const inner = lucideIconPaths[name];
+        if (!inner) return '';
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+    }
+
+    const menuRoot = document.createElement('div');
+    menuRoot.id = 'menu-root';
+    document.body.appendChild(menuRoot);
+
+    const faLink = document.createElement('link');
+    faLink.rel = 'stylesheet';
+    faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
+    faLink.crossOrigin = 'anonymous';
+    document.head.appendChild(faLink);
+
+    const style = document.createElement('style');
+    document.head.appendChild(style);
+    style.textContent = `
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+        :root {
+            --main-color: ${mainColor};
+            --main-rgb: ${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b};
+            --back-color: ${backColor};
+            --back-rgb: ${backColorRGB.r}, ${backColorRGB.g}, ${backColorRGB.b};
+            --back-alpha: ${backColorRGB.a};
+        }
+
+        #menu-root {
+            font-family: sans-serif;
+            color: white;
+            position: fixed;
+            top: 21.5vh;
+            left: 14.25vh;
+            width: 35vh;
+            z-index: 1000;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                       transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #menu-root.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        #menu-root.hiding {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        #tooltip-container {
+            font-family: sans-serif;
+            position: fixed;
+            top: 21.5vh;
+            left: calc(14.25vh + 35vh + 0.5vh);
+            width: 20vh;
+            background-color: rgba(10, 10, 10, 0.975);
+            border-radius: 0.45vh;
+            padding: 0.5vh 1vh;
+            font-size: 1.3vh;
+            display: none;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                       transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #tooltip-container.visible {
+            display: block;
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        #tooltip-container.hiding {
+            opacity: 0;
+            transform: scale(0.95) translateY(-0.45vh);
+        }
+
+        .tooltip-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5vh;
+            min-height: 2.2vh;
+            box-sizing: border-box;
+        }
+
+        .tooltip-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .tooltip-label {
+            color: rgba(255, 255, 255, 0.85);
+            flex-shrink: 0;
+        }
+
+        .tooltip-value-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5vh;
+            min-height: 2.2vh;
+            flex-shrink: 0;
+        }
+        
+        .tooltip-value {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.2;
+        }
+
+        .tooltip-icon {
+            width: auto;
+            height: 1.45vh;
+            object-fit: cover;
+            flex-shrink: 0;
+            order: -1;
+        }
+
+        .tooltip-image {
+            width: 2.2vh;
+            height: 2.2vh;
+            border-radius: 0.3vh;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .tooltip-bar {
+            width: 0.45vh;
+            height: 1.45vh;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 0.45vh;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .tooltip-bar-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            border-radius: 0.15vh;
+            transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #header-wrapper {
+            background-color: ${backColor};
+            border-radius: 0.45vh;
+            overflow: hidden;
+            margin-bottom: 0.45vh;
+            opacity: 0;
+            transform: translateY(-0.9vh);
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                       transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #header-wrapper.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #header-wrapper.hiding {
+            opacity: 0;
+            transform: translateY(-0.9vh);
+        }
+
+        #menu-container {
+            background-color: rgba(${backColorRGB.r}, ${backColorRGB.g}, ${backColorRGB.b}, ${backColorRGB.a});
+            border-radius: 0.45vh;
+            overflow: hidden;
+            position: relative;
+            opacity: 0;
+            transform: translateY(-0.45vh);
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                       transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #menu-container.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #menu-container.hiding {
+            opacity: 0;
+            transform: translateY(-0.45vh);
+        }
+
+        #menu-banner {
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #banner-image {
+            width: 100%;
+            height: 10vh;
+            object-fit: cover;
+            display: block;
+            border-bottom: 0.2vh solid rgba(${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b}, 0.3);
+        }
+
+        #menu-tabs {
+            display: flex;
+        }
+
+        .tab-item {
+            flex: 1;
+            min-width: 0;
+            padding: 0.8vh 0;
+            font-size: 1.1vh;
+            text-align: center;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.6);
+            background: transparent;
+            border-bottom-left-radius: 0.5vh;
+            border-bottom-right-radius: 0.5vh;
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tab-item::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgb(${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b}, 0.3) 0%, transparent 85%);
+            transform: scaleY(0);
+            transform-origin: bottom;
+            transition: 0.5s;
+            z-index: -1;
+        }
+        
+        .tab-item.single {
+            min-width: 8vh;
+            flex-grow: 0;
+            padding: 0.8vh 1vh;
+            flex-basis: auto;
+        }
+        
+        .tab-item.active {
+            color: white;
+            font-weight: 500;
+        }
+        
+        .tab-item.active::before {
+            transform: scaleY(1);
+        }
+
+        #menu-items {
+            position: relative;
+            max-height: 39vh;
+            overflow: hidden;
+        }
+
+        #items-list {
+            position: relative;
+            transition: transform 0.25s ease-out;
+        }
+            
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1vh 1vh;
+            font-size: 1.2vh;
+            border-radius: 0.2vh;
+            transition: background-color 0.2s ease-in-out;
+            height: 3vh;
+            box-sizing: border-box;
+        }
+
+        .name-container {
+            display: flex;
+            align-items: center;
+            gap: 0.9vh;
+            min-width: 0;
+        }
+
+        .name-container .name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .menu-item-icon {
+            width: 1.4vh;
+            height: 1.4vh;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: rgba(255, 255, 255);
+        }
+
+        .menu-item-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .separator-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 1vh;
+        }
+
+        .separator-bar {
+            flex: 1;
+            height: 0.3vh;
+            background-color: rgba(255, 255, 255, 0.8);
+            min-width: 2vh;
+            border-radius: 0.2vh;
+        }
+
+        .separator-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            white-space: nowrap;
+            padding: 0 0.5vh;
+        }
+
+        .menu-item.separator {
+            justify-content: center;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 0.8vh 1.5vh;
+            pointer-events: none;
+        }
+
+        .menu-item.highlighted {
+            /* Not used */
+        }
+
+        #selection-highlight {
+            position: absolute;
+            margin-top: 0.2vh;
+            left: 0.2vh;
+            right: 0.2vh;
+            height: 2.4vh;
+            background-color: rgba(var(--main-rgb), 0.35);
+            border: 0.1vh solid rgba(var(--main-rgb), 0.35);
+            box-shadow: 0 0 0.2vh 0.2vh rgba(var(--main-rgb), 0.45);
+            border-radius: 0.4vh;
+            z-index: -1;
+            transition: top 0.25s ease-out;
+        }
+
+        .components-container {
+            display: flex;
+            gap: 1vh;
+            align-items: center;
+        }
+
+        .component {
+            display: flex;
+            align-items: center;
+            gap: 0.5vh;
+        }
+
+        .component.icon {
+            order: -1;
+        }
+
+        .submenu-arrow-icon {
+            width: 1.4vh;
+            height: 1.4vh;
+            color: rgba(255, 255, 255, 0.75);
+            flex-shrink: 0;
+        }
+
+        .component .icon-image {
+            width: auto;
+            height: 1.6vh;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .component .slider-component {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: auto;
+            font-size: 1.2vh;
+            text-align: center;
+            user-select: none;
+        }
+
+        .component .slider-component span {
+            margin: 0 0.8vh;
+            min-width: 5vh;
+            position: relative;
+            left: 1vh;
+        }
+
+        .component .slider-component span::before {
+            content: '- ';
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .component .slider-component span::after {
+            content: ' -';
+            color: rgba(255, 255, 255, 0.6);
+        }
+ 
+        .component .range-component {
+            position: relative;
+            width: 8vh;
+            height: 2vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .component .range-value {
+            position: absolute;
+            top: -1.6vh;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            background: #333;
+            color: #fff;
+            padding: 0.2vh 0.6vh;
+            border-radius: 0.3vh;
+            font-size: 1.1vh;
+            transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .component .range-component:hover .range-value {
+            transform: translateX(-50%) scale(1);
+            opacity: 1;
+        }
+
+        .component .range-track {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 0.4vh;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 0.2vh;
+            z-index: 1;
+        }
+
+        .component .range-fill {
+            position: absolute;
+            left: 0;
+            height: 0.4vh;
+            background-color: #fff;
+            border-radius: 0.2vh;
+            z-index: 2;
+        }
+
+        .component input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 0.4vh;
+            background: transparent;
+            outline: none;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+            position: relative;
+            z-index: 3;
+        }
+    
+        .component input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 1.4vh;
+            height: 1.4vh;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-top: 0;
+        }
+        
+        .component input[type="range"]::-moz-range-thumb {
+            width: 1.4vh;
+            height: 1.4vh;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+    
+        .component button {
+            background: #4a4a4a;
+            border: none;
+            color: white;
+            padding: 0.3vh 0.8vh;
+            border-radius: 0.3vh;
+            font-size: 1.2vh;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .component button:hover {
+            background: #6a6a6a;
+        }
+
+        .component input[type="checkbox"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background-color: #333;
+            margin: 0;
+            width: 3.3vh;
+            height: 1.4vh;
+            border-radius: 1vh;
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+
+        .component input[type="checkbox"]::after {
+            content: '';
+            position: absolute;
+            top: 0.2vh;
+            left: 0.2vh;
+            width: 1vh;
+            height: 1vh;
+            background-color: #f0f0f0;
+            border-radius: 50%;
+            transition: left 0.2s ease-in-out;
+        }
+
+        .component input[type="checkbox"]:checked {
+            background-color: rgba(${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b}, 0.75);
+        }
+
+        .component input[type="checkbox"]:checked::after {
+            left: 2vh;
+        }
+
+        #menu-footer {
+            background-color: ${backColor};
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 0.45vh;
+            padding: 0.55vh 0.75vh;
+            font-size: 1.15vh;
+            color: white;
+            margin-top: 0.45vh;
+            height: 1.95vh;
+            opacity: 0;
+            transform: translateY(1vh);
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                       transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #menu-footer.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #menu-footer.hiding {
+            opacity: 0;
+            transform: translateY(1vh);
+        }
+
+        #footer-left {
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        #footer-right {
+            font-weight: 500;
+            font-family: monospace;
+            color: ${mainColor};
+        }
+
+        #menu-scrollbar {
+            position: absolute;
+            left: -1.2vh;
+            top: 13.65vh;
+            width: 0.6vh;
+            height: 39vh;
+            opacity: 0;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #menu-scrollbar.visible {
+            opacity: 1;
+        }
+
+        #menu-scrollbar.hiding {
+            opacity: 0;
+        }
+
+        #scrollbar-track {
+            width: 100%;
+            height: 100%;
+            background-color: rgba(${backColorRGB.r}, ${backColorRGB.g}, ${backColorRGB.b}, ${backColorRGB.a});
+            border-radius: 0.4vh;
+            position: relative;
+        }
+
+        #scrollbar-thumb {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b}, 0.7);
+            border-radius: 0.2vh;
+            transition: top 0.25s ease-out, height 0.25s ease-out;
+            min-height: 2vh;
+        }
+
+        #scrollbar-thumb:hover {
+            background-color: rgba(${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b}, 0.9);
+        }
+
+        #menu-container {
+            background-color: rgba(${backColorRGB.r}, ${backColorRGB.g}, ${backColorRGB.b}, ${backColorRGB.a});
+            border-radius: 0.45vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #notification-container {
+            position: fixed;
+            font-family: sans-serif;
+            bottom: 2vh;
+            right: 2vh;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1vh;
+            pointer-events: none;
+            width: 30vh;
+        }
+
+        .input-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: none;
+            width: 100%;
+            height: 100%;
+            background: rgb(0, 0, 0, 0.5);
+            z-index: 999999;
+            color: white;
+            font-weight: 300;
+            font-family: sans-serif;
+            font-size: 1.2vh;
+            transition: 0.5s;
+        }
+
+        .input-box {
+            background-color: rgba(${backColorRGB.r}, ${backColorRGB.g}, ${backColorRGB.b}, ${backColorRGB.a});
+            border-radius: 0.25vh;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            bottom: 17.5vh;
+            left: 50%;
+            transform: translateX(-50%);
+            height: auto;
+            width: 55vh;
+            overflow: hidden;
+        }
+
+        .input-box > .input-header {
+            padding: 0.8vh 1vh 0.8vh 1vh;
+            border-bottom: 0.1vh solid ${mainColor};
+            width: 100%;
+            font-size: 1.2vh;
+        }
+
+        .input-box input {
+            padding: 1.25vh 1vh 1.25vh 1vh;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: white;
+            font-size: 1.2vh;
+        }
+
+        .input-box input::selection {
+            background-color: ${mainColor};
+            color: white;
+        }
+
+        .input-header-inner {
+            display: flex;
+            align-items: center;
+            gap: 0.5vh;
+        }
+
+        .input-header-inner img {
+            width: auto;
+            height: 2vh;
+            object-fit: contain;
+        }
+
+        .input-divider {
+            width: 0.2vh;
+            height: 1.5vh;
+            background: white;
+        }
+
+        .input-header-text {
+            color: white;
+        }
+
+.notification {
+            width: 100%;
+            min-height: 4.5vh;
+            background-color: rgba(var(--back-rgb), var(--back-alpha));
+            border-radius: 0.6vh;
+            padding: 1.1vh 1.3vh;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 1vh;
+            word-wrap: break-word;
+            word-break: break-word;
+            hyphens: auto;
+            box-sizing: border-box;
+            transform: translateY(-100%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notification-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35vh;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .notification.hide {
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.6, 1);
+        }
+
+        .notification-header {
+            font-weight: 600;
+            font-size: 1.4vh;
+            color: white;
+            margin-bottom: 0.15vh;
+            line-height: 1.3;
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .notification-message {
+            font-size: 1.1vh;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.4;
+            word-wrap: break-word;
+            word-break: break-word;
+            hyphens: auto;
+        }
+
+        .notification-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0.3vh;
+        }
+
+        .notification-progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            transform-origin: left;
+            transition: transform linear;
+        }
+
+        .live-list-container {
+            position: fixed;
+            font-family: sans-serif;
+            color: white;
+            border-radius: 0.45vh;
+            padding: 0;
+            font-size: 1.3vh;
+            z-index: 1500;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                       transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .live-list-container.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .live-list-container.hiding {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        .live-list-header {
+            position: relative;
+            background-color: rgba(0, 0, 0, 0.9);
+            border-bottom: 0.1vh solid var(--main-color);
+            padding: 0.6vh 0.7vh 0.6vh 1.3vh;
+            font-weight: 500;
+            font-size: 1.1vh;
+            display: flex;
+            align-items: center;
+            gap: 0.6vh;
+        }
+
+        .live-list-header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.5vh;
+            bottom: 0.5vh;
+            width: 0.3vh;
+            border-radius: 0.5vh;
+            background-color: var(--main-color);
+            z-index: 1;
+        }
+
+        .live-list-header-icon {
+            margin-left: 0.25vh;
+            width: 1.3vh;
+            height: 1.3vh;
+            line-height: 1;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--main-color);
+        }
+
+        .live-list-header-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .live-list-header-text {
+            flex: 1;
+        }
+
+        .live-list-items {
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 0.45vh 0.7vh;
+        }
+
+        .live-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0.35vh 0;
+            font-size: 1vh;
+            box-sizing: border-box;
+        }
+
+        .live-list-label {
+            flex-shrink: 0;
+        }
+
+        .live-list-value {
+            font-weight: 500;
+            font-size: 0.9vh;
+            text-align: right;
+        }
+
+        #watermark-container {
+            position: fixed;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 18px;
+            height: 34px;
+            box-sizing: border-box;
+            background: rgba(${backColorRGB.r}, ${backColorRGB.g}, ${backColorRGB.b}, ${backColorRGB.a});
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.92);
+            font-family: 'Inter Tight', 'Poppins', sans-serif;
+            font-size: 12.5px;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+            pointer-events: none;
+            user-select: none;
+            z-index: 9000;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.22s ease, transform 0.22s cubic-bezier(.2, .9, .3, 1.1);
+        }
+
+        #watermark-container.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        #watermark-container.centered {
+            transform: translate(-50%, -8px);
+        }
+
+        #watermark-container.centered.visible {
+            transform: translate(-50%, 0);
+        }
+
+        .watermark-segment {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .watermark-segment.brand {
+            color: var(--main-color);
+            font-weight: 600;
+        }
+
+        .watermark-icon {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .watermark-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .watermark-label {
+            color: rgba(255, 255, 255, 0.45);
+            font-weight: 400;
+        }
+
+        .watermark-divider {
+            width: 1px;
+            align-self: stretch;
+            margin: 2px 0;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.10);
+        }
+
+        #help-message-container {
+            position: fixed;
+            bottom: 4vh;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1500;
+            font-family: sans-serif;
+            opacity: 0;
+            transform: translateX(-50%) translateY(1vh);
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                       transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        #help-message-container.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #help-message-container.hiding {
+            opacity: 0;
+            transform: translateX(-50%) translateY(1vh);
+        }
+
+        #help-message {
+            color: rgb(255, 255, 255, 0.8);
+            padding: 0.8vh 1.6vh;
+            border-radius: 0.5vh;
+            font-size: 1.1vh;
+            font-weight: 400;
+            text-align: center;
+            white-space: nowrap;
+            background-color: rgba(${backColorRGB.r}, ${backColorRGB.g}, ${backColorRGB.b}, ${backColorRGB.a});
+            transition: 0.5s;
+        }
+
+        #help-message::before,
+        #help-message::after {
+            content: '';
+            position: absolute;
+            top: 0.5vh;
+            bottom: 0.5vh;
+            width: 0.3vh;
+            border-radius: 0.5vh;
+            background-color: var(--main-color);
+            z-index: 1;
+        }
+
+        #help-message::before {
+            left: 0;
+        }
+
+        #help-message::after {
+            right: 0;
+        }
+
+        #progress-container {
+            position: fixed;
+            opacity: 0;
+            top: 0;
+            left: 0;
+            transform: none;
+            width: 100%;
+            height: 100%;
+            z-index: 999999;
+            color: white;
+            font-weight: 300;
+            font-family: sans-serif;
+            font-size: 1.2vh;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.4) 100%);
+            transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #progress-box {
+            position: absolute;
+            bottom: 1vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 36vh;
+            box-sizing: border-box;
+            padding: 2vh 2.2vh 1.8vh;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            grid-template-areas:
+                "label percent"
+                "bar bar"
+                "hint hint";
+            row-gap: 1vh;
+            column-gap: 1vh;
+            border-radius: 0.7vh;
+            background: rgba(${backColorRGB.r}, ${backColorRGB.g}, ${backColorRGB.b}, ${backColorRGB.a});
+            box-shadow:
+                0 1.6vh 4vh rgba(0, 0, 0, 0.6),
+                0 0 3vh rgba(${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b}, 0.12);
+            animation: progress-box-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        #progress-box::before,
+        #progress-box::after {
+            content: '';
+            position: absolute;
+            width: 1vh;
+            height: 1vh;
+            pointer-events: none;
+            opacity: 0.9;
+        }
+
+        @keyframes progress-box-in {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -46%) scale(0.94);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        #progress-top-text {
+            grid-area: label;
+            align-self: end;
+            justify-self: start;
+            display: flex;
+            align-items: center;
+            gap: 0.6vh;
+            color: rgba(255, 255, 255);
+            font-size: 1.05vh;
+            font-weight: 600;
+            letter-spacing: 0.18vh;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        #progress-bar-container {
+            grid-area: bar;
+            position: relative;
+            width: 100%;
+            height: 0.55vh;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.06);
+            box-shadow: inset 0 0.1vh 0.25vh rgba(0, 0, 0, 0.5);
+            border-radius: 0.25vh;
+        }
+
+        #progress-bar {
+            position: relative;
+            width: 0%;
+            height: 100%;
+            box-sizing: border-box;
+            background: ${mainColor};
+            box-shadow:
+                0 0 0.5vh rgba(${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b}, 0.85),
+                0 0 1.4vh rgba(${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b}, 0.4);
+            transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 0.25vh;
+        }
+
+        #progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 1.2vh;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.95) 100%);
+            filter: blur(0.15vh);
+            animation: progress-glint 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes progress-glint {
+            from { opacity: 0.25; }
+            to { opacity: 1; }
+        }
+
+        #progress-percent-text {
+            grid-area: percent;
+            align-self: end;
+            justify-self: end;
+            color: ${mainColor};
+            font-size: 1.55vh;
+            font-weight: 700;
+            font-family: Consolas, 'SFMono-Regular', ui-monospace, monospace;
+            letter-spacing: 0.02vh;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #progress-bottom-text {
+            grid-area: hint;
+            display: flex;
+            align-items: center;
+            gap: 0.5vh;
+            color: rgba(255, 255, 255);
+            font-size: 1.05vh;
+            font-weight: 400;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .hovering-text-wrap {
+            position: fixed;
+            bottom: 7.5vh;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            outline: none;
+            min-width: 18.52vh;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
+        }
+
+        .hovering-text-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            pointer-events: none;
+            user-select: none;
+            max-height: calc(9 * (1.3vh * 1.3 + 0.37vh));
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            scroll-behavior: smooth;
+        }
+
+        .hovering-text-list::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hovering-text-item {
+            padding: 0.185vh 0;
+            font-size: 1.3vh;
+            line-height: 1.3;
+            transition: transform 0.22s cubic-bezier(.2,.9,.2,1), color 0.22s cubic-bezier(.2,.9,.2,1), letter-spacing 0.22s;
+            transform-origin: center;
+            white-space: nowrap;
+            min-width: 27.78vh;
+            font-weight: 600;
+            color: #fff;
+        }
+
+		.hovering-text-inactive {
+			color: rgba(255, 255, 255, 0.55);
+			transform: scale(0.98);
+			letter-spacing: 0;
+		}
+
+        .hovering-text-selected {
+            transform: scale(1.03);
+            font-weight: 600;
+            letter-spacing: 0.015vh;
+            color: ${mainColor};
+        }
+
+        @keyframes hovering-text-pulse {
+            0% { transform: translateY(-0.185vh) scale(1.03); }
+            30% { transform: translateY(-0.556vh) scale(1.08); }
+            100% { transform: translateY(-0.185vh) scale(1.03); }
+        }
+
+        .hovering-text-activated {
+            animation: hovering-text-pulse 0.42s cubic-bezier(.2,.9,.3,1) both;
+        }
+
+        .hovering-text-toast {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 8vh;
+            background: transparent;
+            padding: 0.556vh 1.111vh;
+            border-radius: 0.741vh;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.26s ease;
+            color: ${mainColor};
+        }
+
+        .hovering-text-toast.visible {
+            opacity: 1;
+        }
+
+        [data-hovering-text-hidden="true"] {
+            display: none !important;
+        }
+    `;
+    
+    document.head.appendChild(style);
+
+    menuRoot.innerHTML = `
+        <div id="header-wrapper">
+            <div id="menu-banner">
+                <img src="https://mayhemmenu.com/upload/assets/banner.png" alt="" id="banner-image" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg, rgba(28,209,82,0.3) 0%, rgba(11,11,15,0.95) 100%)';this.parentElement.style.height='10vh';">
+            </div>
+            <div id="menu-tabs"></div>
+        </div>
+        <div id="menu-container">
+            <div id="menu-items">
+                <div id="selection-highlight"></div>
+                <div id="items-list"></div>
+            </div>
+        </div>
+        <div id="menu-scrollbar">
+            <div id="scrollbar-track">
+                <div id="scrollbar-thumb"></div>
+            </div>
+        </div>
+        <div id="menu-footer">
+            <span id="footer-left">Mayhem</span>
+            <span id="footer-right">0/0</span>
+        </div>
+    `;
+    
+    const tooltipContainer = document.createElement('div');
+    tooltipContainer.id = 'tooltip-container';
+    document.body.appendChild(tooltipContainer);
+
+    let currentHelpMessage = null;
+
+    const helpMessageContainer = document.createElement('div');
+    helpMessageContainer.id = 'help-message-container';
+    document.body.appendChild(helpMessageContainer);
+
+    const helpMessage = document.createElement('div');
+    helpMessage.id = 'help-message';
+    helpMessageContainer.appendChild(helpMessage);
+
+    const notificationContainer = document.createElement('div');
+    notificationContainer.id = 'notification-container';
+    document.body.appendChild(notificationContainer);
+
+    const inputDialog = document.createElement('div');
+    inputDialog.className = 'input-overlay';
+    inputDialog.style.opacity = '0';
+
+    const inputContainer = document.createElement('div');
+    inputContainer.className = 'input-box';
+
+    const inputHeader = document.createElement('div');
+    inputHeader.className = 'input-header';
+
+    const inputHeaderInner = document.createElement('div');
+    inputHeaderInner.className = 'input-header-inner';
+
+    const inputIcon = document.createElement('img');
+    inputIcon.src = 'user';
+
+    const inputDivider = document.createElement('div');
+    inputDivider.className = 'input-divider';
+
+    const headerText = document.createElement('div');
+    headerText.className = 'input-header-text';
+
+    inputHeaderInner.appendChild(inputIcon);
+    inputHeaderInner.appendChild(inputDivider);
+    inputHeaderInner.appendChild(headerText);
+    inputHeader.appendChild(inputHeaderInner);
+
+    const inputBox = document.createElement('input');
+
+    inputContainer.appendChild(inputHeader);
+    inputContainer.appendChild(inputBox);
+    inputDialog.appendChild(inputContainer);
+    document.body.appendChild(inputDialog);
+    
+    const hoveringTextWrap = document.createElement('div');
+    hoveringTextWrap.className = 'hovering-text-wrap';
+    hoveringTextWrap.tabIndex = 0;
+    hoveringTextWrap.setAttribute('role', 'listbox');
+    hoveringTextWrap.setAttribute('aria-hidden', 'false');
+    document.body.appendChild(hoveringTextWrap);
+
+    const hoveringTextListEl = document.createElement('ul');
+    hoveringTextListEl.className = 'hovering-text-list';
+    hoveringTextWrap.appendChild(hoveringTextListEl);
+
+    const hoveringTextToast = document.createElement('div');
+    hoveringTextToast.className = 'hovering-text-toast';
+    hoveringTextToast.setAttribute('role', 'status');
+    hoveringTextToast.setAttribute('aria-live', 'polite');
+    document.body.appendChild(hoveringTextToast);
+
+    let hoveringTextVisible = false;
+    let hoveringTextSelectedIndex = 0;
+    let hoveringTextOptions = [];
+    let hoveringTextItems = [];
+
+    function hoveringTextClamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+    };
+
+    function hoveringTextWrapIndex(index) {
+        return hoveringTextItems.length ? ((index % hoveringTextItems.length + hoveringTextItems.length) % hoveringTextItems.length) : 0;
+    };
+
+    function hoveringTextFindNearestIndex(prevId) {
+        if (!hoveringTextItems.length) return 0;
+        const idx = hoveringTextItems.findIndex(it => it.dataset.id === prevId);
+        if (idx >= 0) return idx;
+        return hoveringTextClamp(hoveringTextSelectedIndex, 0, hoveringTextItems.length - 1);
+    };
+
+    function hoveringTextRenderList(preserveSelectedId = null) {
+        const prevSelectedId = preserveSelectedId ?? (hoveringTextItems[hoveringTextSelectedIndex] && hoveringTextItems[hoveringTextSelectedIndex].dataset.id);
+        hoveringTextListEl.innerHTML = '';
+
+        hoveringTextOptions.forEach((opt, i) => {
+            const li = document.createElement('li');
+            li.className = 'hovering-text-item';
+            li.dataset.id = String(opt.id);
+
+            let fullData;
+            if (opt.data && opt.data.trim() !== '') {
+                fullData = `${opt.name} ${opt.data}`;
+            } else {
+                fullData = `${opt.name}`;
+            };
+            
+            li.dataset.data = fullData;
+            
+            li.textContent = String(opt.name);
+            li.id = `hovering-text-opt-${i}`;
+            hoveringTextListEl.appendChild(li);
+        });
+
+        hoveringTextItems = Array.from(hoveringTextListEl.querySelectorAll('.hovering-text-item'));
+        hoveringTextSelectedIndex = hoveringTextFindNearestIndex(prevSelectedId);
+        hoveringTextUpdateSelection();
+    }
+
+    function hoveringTextUpdateMask() {
+        const scrollTop = hoveringTextListEl.scrollTop;
+        const scrollHeight = hoveringTextListEl.scrollHeight;
+        const clientHeight = hoveringTextListEl.clientHeight;
+        const scrollBottom = scrollHeight - scrollTop - clientHeight;
+        const fadeDistance = 50;
+        const topFadeAmount = Math.min(scrollTop / fadeDistance, 1);
+        const bottomFadeAmount = Math.min(scrollBottom / fadeDistance, 1);
+        const topFade = topFadeAmount * 15;
+        const bottomFade = 100 - (bottomFadeAmount * 15);
+        const safeTopFade = Math.min(topFade, bottomFade - 5);
+        const safeBottomFade = Math.max(bottomFade, topFade + 5);
+        const gradient = `linear-gradient(to bottom, transparent 0%, black ${safeTopFade}%, black ${safeBottomFade}%, transparent 100%)`;
+        
+        hoveringTextListEl.style.maskImage = gradient;
+        hoveringTextListEl.style.webkitMaskImage = gradient;
+    };
+
+    function hoveringTextScrollToSelected() {
+        if (!hoveringTextItems.length || hoveringTextSelectedIndex < 0) return;
+        
+        const selectedEl = hoveringTextItems[hoveringTextSelectedIndex];
+        if (!selectedEl) return;
+        
+        selectedEl.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+    };
+ 
+    function hoveringTextUpdateSelection() {
+        if (!hoveringTextItems.length) {
+            hoveringTextSelectedIndex = 0;
+            hoveringTextListEl.innerHTML = '';
+            return;
+        }
+
+        hoveringTextItems.forEach((it, i) => {
+            const isSelected = i === hoveringTextSelectedIndex;
+            it.classList.toggle('hovering-text-selected', isSelected);
+            it.classList.toggle('hovering-text-inactive', !isSelected);
+
+            if (isSelected) {
+                const data = it.dataset.data;
+                const hasParentheses = data.includes('(');
+
+                if (hasParentheses) {
+                    const coloredText = data.replace(/\(([^)]+)\)/g, `(<span style="color: ${mainColor};">$1</span>)`);
+                    it.innerHTML = `<span style="color: #fff;">${coloredText}</span>`;
+                } else {
+                    it.innerHTML = `<span style="color: ${mainColor};">${data}</span>`;
+                }
+
+                it.setAttribute('aria-current', 'true');
+                hoveringTextWrap.setAttribute('aria-activedescendant', it.id);
+            } else {
+                const opt = hoveringTextOptions.find(o => String(o.id) === it.dataset.id);
+                it.textContent = opt ? opt.name : it.textContent;
+                it.style.color = '';
+                it.removeAttribute('aria-current');
+            }
+        });
+        
+        hoveringTextScrollToSelected();
+        setTimeout(hoveringTextUpdateMask, 50);
+    };
+
+    function hoveringTextShowToast(text, ms = 900) {
+        hoveringTextToast.textContent = text;
+        hoveringTextToast.classList.add('visible');
+        clearTimeout(hoveringTextShowToast._t);
+        hoveringTextShowToast._t = setTimeout(() => hoveringTextToast.classList.remove('visible'), ms);
+    }
+
+    function hoveringTextActivateSelection() {
+        const el = hoveringTextItems[hoveringTextSelectedIndex];
+        if (!el) return null;
+
+        el.classList.remove('hovering-text-activated');
+        void el.offsetWidth;
+        el.classList.add('hovering-text-activated');
+
+        const id = el.dataset.id;
+        const name = el.textContent.trim();
+
+        hoveringTextShowToast(`Selected: ${name} (id: ${id})`);
+
+        return { id, name };
+    };
+
+    hoveringTextListEl.addEventListener('scroll', hoveringTextUpdateMask);
+
+    let hoveringTextTransitioning = false;
+    let hoveringTextTransitionTimeout = null;
+
+    window.hoveringText = {
+        showList() {
+            if (hoveringTextTransitioning && hoveringTextVisible) return;
+            
+            if (hoveringTextTransitionTimeout) {
+                clearTimeout(hoveringTextTransitionTimeout);
+                hoveringTextTransitionTimeout = null;
+            }
+            
+            hoveringTextVisible = true;
+            hoveringTextTransitioning = true;
+            
+            hoveringTextWrap.removeAttribute('data-hovering-text-hidden');
+            hoveringTextWrap.setAttribute('aria-hidden', 'false');
+            
+            hoveringTextWrap.style.transition = 'none';
+            hoveringTextWrap.style.opacity = '0';
+            hoveringTextWrap.style.transform = 'translateX(-50%) translateY(1vh)';
+            
+            setTimeout(() => {
+                hoveringTextWrap.style.transition = 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                hoveringTextWrap.style.opacity = '1';
+                hoveringTextWrap.style.transform = 'translateX(-50%) translateY(0)';
+                
+                hoveringTextTransitionTimeout = setTimeout(() => {
+                    hoveringTextTransitioning = false;
+                    hoveringTextTransitionTimeout = null;
+                }, 300);
+            }, 10);
+            
+            hoveringTextWrap.focus();
+            hoveringTextRenderList();
+        },
+
+        hideList() {
+            if (hoveringTextTransitioning && !hoveringTextVisible) return;
+            
+            if (hoveringTextTransitionTimeout) {
+                clearTimeout(hoveringTextTransitionTimeout);
+                hoveringTextTransitionTimeout = null;
+            }
+            
+            hoveringTextVisible = false;
+            hoveringTextTransitioning = true;
+            
+            hoveringTextWrap.style.transition = 'opacity 0.3s cubic-bezier(0.4, 0, 0.6, 1), transform 0.3s cubic-bezier(0.4, 0, 0.6, 1)';
+            hoveringTextWrap.style.opacity = '0';
+            hoveringTextWrap.style.transform = 'translateX(-50%) translateY(1vh)';
+            
+            hoveringTextTransitionTimeout = setTimeout(() => {
+                hoveringTextWrap.setAttribute('data-hovering-text-hidden', 'true');
+                hoveringTextWrap.setAttribute('aria-hidden', 'true');
+                try { hoveringTextWrap.blur(); } catch (e) {}
+                hoveringTextTransitioning = false;
+                hoveringTextTransitionTimeout = null;
+            }, 300);
+        },
+
+        toggleVisibility() {
+            if (hoveringTextVisible) this.hideList();
+            else this.showList();
+        },
+
+        setOptions(newOptions = []) {
+            hoveringTextOptions = newOptions.map(o => ({
+                id: String(o.id),
+                name: String(o.name),
+                data: String(o.data || '')
+            }));
+            hoveringTextRenderList();
+        },
+
+        addOption(opt, atIndex = undefined) {
+            const prevId = hoveringTextItems[hoveringTextSelectedIndex]?.dataset.id;
+            const n = { 
+                id: String(opt.id), 
+                name: String(opt.name),
+                data: String(opt.data || '')
+            };
+
+            if (atIndex === undefined) hoveringTextOptions.push(n);
+            else hoveringTextOptions.splice(hoveringTextClamp(atIndex, 0, hoveringTextOptions.length), 0, n);
+
+            hoveringTextRenderList(prevId);
+        },
+
+        removeOptionById(id) {
+            const prevId = hoveringTextItems[hoveringTextSelectedIndex]?.dataset.id;
+            const sid = String(id);
+            const prevLen = hoveringTextOptions.length;
+
+            hoveringTextOptions = hoveringTextOptions.filter(o => String(o.id) !== sid);
+
+            if (hoveringTextOptions.length === prevLen) return false;
+
+            hoveringTextRenderList(prevId);
+            return true;
+        },
+
+        updateOption(id, newData) {
+            const sid = String(id);
+            const optIndex = hoveringTextOptions.findIndex(o => String(o.id) === sid);
+            
+            if (optIndex === -1) return false;
+            
+            const option = hoveringTextOptions[optIndex];
+            const wasSelected = hoveringTextSelectedIndex === optIndex;
+            
+            if (newData.name !== undefined) {
+                option.name = String(newData.name);
+            }
+            
+            if (newData.data !== undefined) {
+                option.data = String(newData.data || '');
+            }
+            
+            if (wasSelected && hoveringTextVisible) {
+                const selectedEl = hoveringTextItems[hoveringTextSelectedIndex];
+                if (selectedEl) {
+                    let fullData;
+                    if (option.data && option.data.trim() !== '') {
+                        fullData = `${option.name} ${option.data}`;
+                    } else {
+                        fullData = `${option.name}`;
+                    }
+
+                    selectedEl.dataset.data = fullData;
+
+                    const hasParentheses = fullData.includes('(');
+
+                    if (hasParentheses) {
+                        const coloredText = fullData.replace(/\(([^)]+)\)/g, `(<span style="color: ${mainColor};">$1</span>)`);
+                        selectedEl.innerHTML = `<span style="color: #fff;">${coloredText}</span>`;
+                    } else {
+                        selectedEl.innerHTML = `<span style="color: ${mainColor};">${fullData}</span>`;
+                    }
+                }
+            } else {
+                const el = hoveringTextItems[optIndex];
+                if (el) {
+                    let fullData;
+                    if (option.data && option.data.trim() !== '') {
+                        fullData = `${option.name} ${option.data}`;
+                    } else {
+                        fullData = `${option.name}`;
+                    }
+
+                    el.dataset.data = fullData;
+                    el.textContent = option.name;
+                }
+            }
+            
+            return true;
+        },
+
+        getOptions() {
+            return hoveringTextOptions.slice();
+        },
+
+        getSelected() {
+            const el = hoveringTextItems[hoveringTextSelectedIndex];
+            if (!el) return null;
+            return {
+                id: el.dataset.id,
+                name: el.textContent.trim(),
+                index: hoveringTextSelectedIndex
+            };
+        },
+
+        selectById(id) {
+            const sid = String(id);
+            const idx = hoveringTextItems.findIndex(it => it.dataset.id === sid);
+            if (idx >= 0) {
+                hoveringTextSelectedIndex = idx;
+                hoveringTextUpdateSelection();
+                return true;
+            }
+            return false;
+        },
+
+        selectByIndex(i) {
+            if (i < 0 || i >= hoveringTextItems.length) return false;
+            hoveringTextSelectedIndex = i;
+            hoveringTextUpdateSelection();
+            return true;
+        },
+
+        activate() {
+            return hoveringTextActivateSelection();
+        },
+
+        moveSelectionDown() {
+            if (!hoveringTextVisible) return;
+            hoveringTextSelectedIndex = hoveringTextWrapIndex(hoveringTextSelectedIndex + 1);
+            hoveringTextUpdateSelection();
+        },
+
+        moveSelectionUp() {
+            if (!hoveringTextVisible) return;
+            hoveringTextSelectedIndex = hoveringTextWrapIndex(hoveringTextSelectedIndex - 1);
+            hoveringTextUpdateSelection();
+        },
+
+        moveSelectionHome() {
+            if (!hoveringTextVisible) return;
+            hoveringTextSelectedIndex = 0;
+            hoveringTextUpdateSelection();
+        },
+
+        moveSelectionEnd() {
+            if (!hoveringTextVisible) return;
+            hoveringTextSelectedIndex = Math.max(0, hoveringTextItems.length - 1);
+            hoveringTextUpdateSelection();
+        }
+    };
+
+    hoveringTextRenderList();
+    hoveringTextUpdateMask();
+
+    window.crosshair = {
+        element: null,
+        show() {
+            if (!this.element) {
+                this.element = document.createElement('div');
+                this.element.id = 'screen-crosshair';
+                this.element.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 0.9259vh;
+                    height: 0.9259vh;
+                    pointer-events: none;
+                    z-index: 10000;
+                    display: none;
+                `;
+
+                const hLine = document.createElement('div');
+                hLine.style.cssText = `
+                    position: absolute;
+                    top: 50%;
+                    left: 0;
+                    width: 100%;
+                    height: 0.185vh;
+                    background-color: white;
+                    transform: translateY(-50%);
+                `;
+
+                const vLine = document.createElement('div');
+                vLine.style.cssText = `
+                    position: absolute;
+                    left: 50%;
+                    top: 0;
+                    width: 0.185vh;
+                    height: 100%;
+                    background-color: white;
+                    transform: translateX(-50%);
+                `;
+
+                this.element.appendChild(hLine);
+                this.element.appendChild(vLine);
+                document.body.appendChild(this.element);
+            };
+            
+            this.element.style.display = 'block';
+        },
+        hide() {
+            if (this.element) {
+                this.element.style.display = 'none';
+            }
+        }
+    };
+        
+    window.showInput = function(data) {
+        headerText.textContent = data.header || 'Enter Value';
+        inputBox.value = data.value || '';
+        inputBox.placeholder = data.placeholder || '';
+
+        setTimeout(() => {
+            inputDialog.style.opacity = '1';
+            inputBox.focus();
+
+            if (data.selectionStart !== undefined) {
+                inputBox.setSelectionRange(data.selectionStart, data.selectionEnd || data.selectionStart);
+            }
+        }, 10);
+    };
+    
+    window.hideInput = function() {
+        inputDialog.style.opacity = '0';
+    };
+    
+    window.updateInput = function(data) {
+        inputBox.value = data.value || '';
+
+        if (data.selectionStart !== undefined) {
+            inputBox.setSelectionRange(data.selectionStart, data.selectionEnd || data.selectionStart);
+        }
+    };
+
+    window.copyToClipboardWithSelection = function(data) {
+        const textArea = document.createElement('textarea');
+        textArea.value = data.text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        const inputElement = document.querySelector('.input-box input');
+        if (inputElement) {
+            inputElement.setSelectionRange(data.selectionStart, data.selectionEnd);
+            inputElement.focus();
+        }
+    };
+
+    window.updateMenuBanner = function(data) {
+        if (!data || !data.banner) return;
+        
+        const bannerElement = document.getElementById('banner-image');
+        if (bannerElement) {
+            bannerElement.src = data.banner;
+        }
+    };
+
+    window.updateMenuColors = function(colors) {
+        if (!colors) return;
+        
+        let setMainColor = colors.mainColor;
+        let setBackColor = colors.backColor;
+        
+        if (setMainColor) {
+            mainColor = setMainColor;
+            mainColorRGB = hexToRgb(setMainColor);
+        }
+        
+        if (setBackColor) {
+            backColor = setBackColor;
+            backColorRGB = hexToRgb(setBackColor);
+            backColorRGB.a = 0.8;
+        }
+        
+        const rootStyle = document.documentElement.style;
+
+        if (mainColorRGB) {
+            rootStyle.setProperty('--main-color', mainColor);
+            rootStyle.setProperty('--main-rgb', `${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b}`);
+        }
+
+        if (backColorRGB) {
+            rootStyle.setProperty('--back-color', backColor);
+            rootStyle.setProperty('--back-rgb', `${backColorRGB.r}, ${backColorRGB.g}, ${backColorRGB.b}`);
+            rootStyle.setProperty('--back-alpha', `${backColorRGB.a}`);
+        }
+
+        const styleElement = document.querySelector('style');
+        if (!styleElement) return;
+
+        let currentCSS = styleElement.textContent;
+
+        if (mainColorRGB) {
+            const brightness = (mainColorRGB.r * 299 + mainColorRGB.g * 587 + mainColorRGB.b * 114) / 1000;
+            const textColor = brightness > 200 ? 'black' : 'white';
+
+            currentCSS = currentCSS.replace(
+                /background:\s*linear-gradient\(to top,\s*rgb\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\)[^)]*\)/g,
+                `background: linear-gradient(to top, rgb(${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b}, 0.3) 0%, transparent 85%)`
+            );
+            
+            currentCSS = currentCSS.replace(
+                /\.component input\[type="checkbox"\]:checked\s*\{[^}]*background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*0\.75\)/g,
+                match => match.replace(/background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*0\.75\)/, `background-color: rgba(${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b}, 0.75)`)
+            );
+            
+            currentCSS = currentCSS.replace(
+                /#scrollbar-thumb\s*\{[^}]*background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*0\.7\)/g,
+                match => match.replace(/background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*0\.7\)/, `background-color: rgba(${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b}, 0.7)`)
+            );
+            
+            currentCSS = currentCSS.replace(
+                /#scrollbar-thumb:hover\s*\{[^}]*background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*0\.9\)/g,
+                match => match.replace(/background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*0\.9\)/, `background-color: rgba(${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b}, 0.9)`)
+            );
+            
+            currentCSS = currentCSS.replace(
+                /\.input-box > \.input-header\s*\{[^}]*border-bottom:\s*0\.1vh solid #[0-9a-fA-F]{6}/g,
+                match => match.replace(/border-bottom:\s*0\.1vh solid #[0-9a-fA-F]{6}/, `border-bottom: 0.1vh solid ${mainColor}`)
+            );
+            
+            currentCSS = currentCSS.replace(
+                /\.input-box input::selection\s*\{[^}]*\}/g,
+                `.input-box input::selection {
+                    background-color: ${mainColor};
+                    color: ${textColor};
+                }`
+            );
+
+            currentCSS = currentCSS.replace(
+                /\.notification-progress-bar\s*\{[^}]*background:\s*#[0-9a-fA-F]{6}/g,
+                match => match.replace(/background:\s*#[0-9a-fA-F]{6}/, `background: ${mainColor}`)
+            );
+
+            currentCSS = currentCSS.replace(
+                /\.hovering-text-selected\s*\{[^}]*color:\s*#[0-9a-fA-F]{6}/g,
+                match => match.replace(/color:\s*#[0-9a-fA-F]{6}/, `color: ${mainColor}`)
+            );
+
+            currentCSS = currentCSS.replace(
+                /\.hovering-text-toast\s*\{[^}]*color:\s*#[0-9a-fA-F]{6}/g,
+                match => match.replace(/color:\s*#[0-9a-fA-F]{6}/, `color: ${mainColor}`)
+            );
+
+            currentCSS = currentCSS.replace(
+                /#banner-image\s*\{[^}]*border-bottom:\s*0\.2vh solid rgba\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\)/g,
+                match => match.replace(/border-bottom:\s*0\.2vh solid rgba\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\)/, `border-bottom: 0.2vh solid rgba(${mainColorRGB.r}, ${mainColorRGB.g}, ${mainColorRGB.b}, 0.3)`)
+            );
+        }
+
+        if (backColorRGB) {
+            currentCSS = currentCSS.replace(
+                /#menu-footer\s*\{[^}]*background-color:\s*#[0-9a-fA-F]{6}/g,
+                match => match.replace(/background-color:\s*#[0-9a-fA-F]{6}/, `background-color: ${backColor}`)
+            );
+
+            currentCSS = currentCSS.replace(
+                /#header-wrapper\s*\{[^}]*background-color:\s*#[0-9a-fA-F]{6}/g,
+                match => match.replace(/background-color:\s*#[0-9a-fA-F]{6}/, `background-color: ${backColor}`)
+            );
+            
+            currentCSS = currentCSS.replace(
+                /#menu-container\s*\{[^}]*background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\)/g,
+                match => match.replace(/background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\)/, `background-color: rgba(${backColorRGB.r}, ${backColorRGB.g}, ${backColorRGB.b}, ${backColorRGB.a})`)
+            );
+
+            currentCSS = currentCSS.replace(
+                /\.input-box\s*\{[^}]*background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\)/g,
+                match => match.replace(/background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\)/, `background-color: rgba(${backColorRGB.r}, ${backColorRGB.g}, ${backColorRGB.b}, ${backColorRGB.a})`)
+            );
+            
+            currentCSS = currentCSS.replace(
+                /\.notification\s*\{[^}]*background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\)/g,
+                match => match.replace(/background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\)/, `background-color: rgba(${backColorRGB.r}, ${backColorRGB.g}, ${backColorRGB.b}, ${backColorRGB.a})`)
+            );
+            
+            currentCSS = currentCSS.replace(
+                /#scrollbar-track\s*\{[^}]*background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\)/g,
+                match => match.replace(/background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\)/, `background-color: rgba(${backColorRGB.r}, ${backColorRGB.g}, ${backColorRGB.b}, ${backColorRGB.a})`)
+            );
+            
+            currentCSS = currentCSS.replace(
+                /#help-message\s*\{[^}]*background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\)/g,
+                match => match.replace(/background-color:\s*rgba\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\)/, `background-color: rgba(${backColorRGB.r}, ${backColorRGB.g}, ${backColorRGB.b}, ${backColorRGB.a})`)
+            );
+        }
+    
+        styleElement.textContent = currentCSS;
+
+        hoveringTextUpdateSelection();
+    };
+
+    let notificationId = 0;
+    const activeNotifications = new Map();
+    const typeColors = {
+        success: 'rgba(44, 196, 90, 1)',
+        warning: '#FF9800',
+        error: '#F44336',
+        info: '#2f94d8'
+    };
+    const typeIcons = {
+        success: String.fromCharCode(10003),
+        warning: '!',
+        error: String.fromCharCode(10005),
+        info: 'i'
+    };
+
+    window.showNotification = function(setType = '', header = '', message = '', duration = 5000) {
+        let setColor = typeColors[setType.toLowerCase()] || mainColor;
+        let setIcon = typeIcons[setType.toLowerCase()] || String.fromCharCode(8226);
+
+        const container = document.getElementById('notification-container') || createNotificationContainer();
+
+        const notification = document.createElement('div');
+        notification.className = `notification`;
+
+        const contentEl = document.createElement('div');
+        contentEl.className = 'notification-content';
+
+        if (header) {
+            const headerEl = document.createElement('div');
+            headerEl.className = 'notification-header';
+            headerEl.textContent = header;
+            contentEl.appendChild(headerEl);
+        }
+
+        const messageEl = document.createElement('div');
+        messageEl.className = 'notification-message';
+        messageEl.textContent = message;
+        contentEl.appendChild(messageEl);
+
+        notification.appendChild(contentEl);
+
+        const progress = document.createElement('div');
+        progress.className = 'notification-progress';
+
+        const progressBar = document.createElement('div');
+        progressBar.className = 'notification-progress-bar';
+        progressBar.style.background = setColor;
+        progressBar.style.transitionDuration = `${duration}ms`;
+        
+        progress.appendChild(progressBar);
+        notification.appendChild(progress);
+        
+        container.appendChild(notification);
+        
+        notification.offsetHeight;
+        
+        requestAnimationFrame(() => {
+            notification.classList.add('show');
+            
+            requestAnimationFrame(() => {
+                progressBar.style.transform = 'scaleX(0)';
+            });
+        });
+
+        setTimeout(() => {
+            notification.classList.remove('show');
+            notification.classList.add('hide');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, duration);
+    };
+
+    function createNotificationContainer() {
+        const container = document.createElement('div');
+        container.id = 'notification-container';
+        document.body.appendChild(container);
+        return container;
+    }
+
+    function hideNotification(id) {
+        const notification = activeNotifications.get(id);
+        if (!notification) return;
+        
+        notification.classList.remove('show');
+        notification.classList.add('hide');
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+            activeNotifications.delete(id);
+        }, 400);
+    }
+
+    window.clearAllNotifications = function() {
+        activeNotifications.forEach((notification, id) => {
+            hideNotification(id);
+        });
+    };
+
+    const liveLists = new Map();
+
+    window.createLiveList = function(data) {
+        if (!data || !data.id) return;
+
+        let container = liveLists.get(data.id);
+        
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'live-list-container';
+            container.id = `live-list-${data.id}`;
+            document.body.appendChild(container);
+            liveLists.set(data.id, container);
+        }
+
+        const header = document.createElement('div');
+        header.className = 'live-list-header';
+
+        const headerText = document.createElement('span');
+        headerText.className = 'live-list-header-text';
+
+        if (!data.icon) {
+            headerText.style.textAlign = 'center';
+        }
+
+        headerText.textContent = data.header || 'Live List';
+        header.appendChild(headerText);
+
+        if (data.icon) {
+            const iconEl = document.createElement('span');
+            iconEl.className = 'live-list-header-icon';
+            iconEl.dataset.icon = data.icon;
+            iconEl.innerHTML = lucideIconSvg(data.icon);
+            iconEl.setAttribute('aria-hidden', 'true');
+
+            header.appendChild(iconEl);
+        }
+
+        const itemsContainer = document.createElement('div');
+        itemsContainer.className = 'live-list-items';
+
+        if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+            itemsContainer.style.opacity = 1;
+
+            data.items.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'live-list-item';
+
+                const label = document.createElement('span');
+                label.className = 'live-list-label';
+                label.textContent = item.label || '';
+
+                const value = document.createElement('span');
+                value.className = 'live-list-value';
+                value.textContent = item.value || '';
+
+                itemDiv.appendChild(label);
+                itemDiv.appendChild(value);
+                itemsContainer.appendChild(itemDiv);
+            });
+        } else {
+            itemsContainer.style.opacity = 0;
+        }
+
+        container.innerHTML = '';
+        container.appendChild(header);
+        container.appendChild(itemsContainer);
+
+        if (data.width) {
+            container.style.width = data.width;
+        }
+
+        if (data.position) {
+            if (data.position.top !== undefined && data.position.top !== null) {
+                container.style.top = data.position.top;
+                container.style.bottom = 'auto';
+            } else if (data.position.bottom !== undefined && data.position.bottom !== null) {
+                container.style.bottom = data.position.bottom;
+                container.style.top = 'auto';
+            }
+
+            if (data.position.left !== undefined && data.position.left !== null) {
+                container.style.left = data.position.left;
+                container.style.right = 'auto';
+            } else if (data.position.right !== undefined && data.position.right !== null) {
+                container.style.right = data.position.right;
+                container.style.left = 'auto';
+            }
+        }
+
+        if (data.visible) {
+            setTimeout(() => {
+                container.classList.add('visible');
+            }, 10);
+        } else {
+            container.classList.remove('visible');
+        }
+    };
+
+    window.updateLiveList = function(data) {
+        if (!data || !data.id) return;
+
+        const container = liveLists.get(data.id);
+        if (!container) {
+            window.createLiveList(data);
+            return;
+        }
+
+        const header = container.querySelector('.live-list-header');
+        if (header) {
+            if (data.header || data.icon !== undefined) {
+                header.innerHTML = '';
+
+                const headerText = document.createElement('span');
+                headerText.className = 'live-list-header-text';
+
+                if (!data.icon) {
+                    headerText.style.textAlign = 'center';
+                }
+
+                headerText.textContent = data.header || 'Live List';
+                header.appendChild(headerText);
+
+                if (data.icon) {
+                    const iconEl = document.createElement('span');
+                    iconEl.className = 'live-list-header-icon';
+                    iconEl.dataset.icon = data.icon;
+                    iconEl.innerHTML = lucideIconSvg(data.icon);
+                    iconEl.setAttribute('aria-hidden', 'true');
+                    header.appendChild(iconEl);
+                }
+            }
+        }
+
+        const itemsContainer = container.querySelector('.live-list-items');
+        if (itemsContainer && data.items !== undefined) {
+            itemsContainer.innerHTML = '';
+
+            if (Array.isArray(data.items) && data.items.length > 0) {
+                itemsContainer.style.opacity = 1;
+
+                data.items.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'live-list-item';
+
+                    const label = document.createElement('span');
+                    label.className = 'live-list-label';
+                    label.textContent = item.label || '';
+
+                    const value = document.createElement('span');
+                    value.className = 'live-list-value';
+                    value.textContent = item.value || '';
+
+                    itemDiv.appendChild(label);
+                    itemDiv.appendChild(value);
+                    itemsContainer.appendChild(itemDiv);
+                });
+            } else {
+                itemsContainer.style.opacity = 0;
+            }
+        }
+
+        if (data.width) {
+            container.style.width = data.width;
+        }
+
+        if (data.position) {
+            if (data.position.top !== undefined && data.position.top !== null) {
+                container.style.top = data.position.top;
+                container.style.bottom = 'auto';
+            } else if (data.position.bottom !== undefined && data.position.bottom !== null) {
+                container.style.bottom = data.position.bottom;
+                container.style.top = 'auto';
+            }
+
+            if (data.position.left !== undefined && data.position.left !== null) {
+                container.style.left = data.position.left;
+                container.style.right = 'auto';
+            } else if (data.position.right !== undefined && data.position.right !== null) {
+                container.style.right = data.position.right;
+                container.style.left = 'auto';
+            }
+        }
+
+        if (data.visible !== undefined) {
+            if (data.visible) {
+                container.classList.remove('hiding');
+                container.classList.add('visible');
+            } else {
+                container.classList.remove('visible');
+                container.classList.add('hiding');
+            }
+        }
+    };
+
+    window.showLiveList = function(id) {
+        if (!id) return;
+
+        const container = liveLists.get(id);
+        if (!container) return;
+
+        container.classList.remove('hiding');
+        container.classList.add('visible');
+    };
+
+    window.hideLiveList = function(id) {
+        if (!id) return;
+
+        const container = liveLists.get(id);
+        if (!container) return;
+
+        container.classList.remove('visible');
+        container.classList.add('hiding');
+    };
+
+    window.removeLiveList = function(id) {
+        if (!id) return;
+
+        const container = liveLists.get(id);
+        if (!container) return;
+
+        container.classList.remove('visible');
+        container.classList.add('hiding');
+        
+        setTimeout(() => {
+            if (container.parentNode) {
+                container.parentNode.removeChild(container);
+            }
+            liveLists.delete(id);
+        }, 300);
+    };
+
+    let watermarkEl = null;
+
+    function getWatermark() {
+        if (!watermarkEl) {
+            watermarkEl = document.createElement('div');
+            watermarkEl.id = 'watermark-container';
+            document.body.appendChild(watermarkEl);
+        }
+
+        return watermarkEl;
+    }
+
+    window.setWatermark = function(data) {
+        if (!data) return;
+
+        const container = getWatermark();
+        const segments = Array.isArray(data.segments) ? data.segments : [];
+
+        container.innerHTML = '';
+
+        segments.forEach((segment, index) => {
+            if (index > 0) {
+                const divider = document.createElement('div');
+                divider.className = 'watermark-divider';
+                container.appendChild(divider);
+            }
+
+            const segmentEl = document.createElement('div');
+            segmentEl.className = segment.brand ? 'watermark-segment brand' : 'watermark-segment';
+
+            if (segment.icon) {
+                const iconEl = document.createElement('span');
+                iconEl.className = 'watermark-icon';
+                iconEl.innerHTML = lucideIconSvg(segment.icon);
+                iconEl.setAttribute('aria-hidden', 'true');
+
+                segmentEl.appendChild(iconEl);
+            }
+
+            if (segment.label) {
+                const labelEl = document.createElement('span');
+                labelEl.className = 'watermark-label';
+                labelEl.textContent = segment.label;
+
+                segmentEl.appendChild(labelEl);
+            }
+
+            const valueEl = document.createElement('span');
+            valueEl.className = 'watermark-value';
+
+            if (segment.dynamic) {
+                valueEl.dataset.dynamic = segment.dynamic;
+                valueEl.textContent = watermarkDynamicValue(segment.dynamic);
+            } else {
+                valueEl.textContent = segment.value !== undefined && segment.value !== null ? String(segment.value) : '';
+            }
+
+            segmentEl.appendChild(valueEl);
+            container.appendChild(segmentEl);
+        });
+
+        if (data.position) {
+            if (data.position.centered) {
+                container.classList.add('centered');
+                container.style.left = '50%';
+                container.style.right = 'auto';
+            } else {
+                container.classList.remove('centered');
+
+                if (data.position.left !== undefined && data.position.left !== null) {
+                    container.style.left = data.position.left;
+                    container.style.right = 'auto';
+                } else if (data.position.right !== undefined && data.position.right !== null) {
+                    container.style.right = data.position.right;
+                    container.style.left = 'auto';
+                }
+            }
+
+            if (data.position.top !== undefined && data.position.top !== null) {
+                container.style.top = data.position.top;
+                container.style.bottom = 'auto';
+            } else if (data.position.bottom !== undefined && data.position.bottom !== null) {
+                container.style.bottom = data.position.bottom;
+                container.style.top = 'auto';
+            }
+        }
+
+        if (data.visible && segments.length > 0) {
+            setTimeout(() => {
+                container.classList.add('visible');
+            }, 10);
+
+            if (!watermarkTicker) {
+                watermarkTicker = setInterval(tickWatermark, 1000);
+            }
+        } else {
+            container.classList.remove('visible');
+
+            if (watermarkTicker) {
+                clearInterval(watermarkTicker);
+                watermarkTicker = null;
+            }
+        }
+    };
+
+    window.showWatermark = function() {
+        getWatermark().classList.add('visible');
+
+        if (!watermarkTicker) {
+            watermarkTicker = setInterval(tickWatermark, 1000);
+        }
+    };
+
+    window.hideWatermark = function() {
+        getWatermark().classList.remove('visible');
+
+        if (watermarkTicker) {
+            clearInterval(watermarkTicker);
+            watermarkTicker = null;
+        }
+    };
+
+    const itemsList = document.getElementById('items-list');
+    const tabsContainer = document.getElementById('menu-tabs');
+    const selectionHighlight = document.getElementById('selection-highlight');
+    const scrollbarThumb = document.getElementById('scrollbar-thumb');
+    const scrollbarTrack = document.getElementById('scrollbar-track');
+    const rangeAnimations = {};
+    let menuConfig = [];
+    let currentMenuConfig = {};
+    let scrollOffset = 0;
+    let currentSelectionIndex = 0;
+
+    window.updateTooltip = function(tooltipData) {
+        if (!tooltipData || tooltipData.length === 0) {
+            tooltipContainer.classList.add('hiding');
+            tooltipContainer.classList.remove('visible');
+            
+            setTimeout(() => {
+                if (tooltipContainer.classList.contains('hiding')) {
+                    tooltipContainer.style.display = 'none';
+                    tooltipContainer.classList.remove('hiding');
+                }
+            }, 300);
+            return;
+        }
+
+        if (tooltipContainer.classList.contains('hiding')) {
+            tooltipContainer.classList.remove('hiding');
+        }
+
+        if (tooltipContainer.style.display === 'none') {
+            tooltipContainer.style.display = 'block';
+            tooltipContainer.offsetHeight;
+        }
+
+        const existingItems = tooltipContainer.querySelectorAll('.tooltip-item');
+        const needsRebuild = existingItems.length !== tooltipData.length;
+
+        if (needsRebuild) {
+            tooltipContainer.innerHTML = '';
+            tooltipData.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'tooltip-item';
+                
+                const labelEl = document.createElement('span');
+                labelEl.className = 'tooltip-label';
+                labelEl.textContent = item.label;
+                
+                const valueContainer = document.createElement('div');
+                valueContainer.className = 'tooltip-value-container';
+                
+                if (item.icon) {
+                    const iconEl = document.createElement('img');
+                    iconEl.className = 'tooltip-icon';
+                    iconEl.src = item.icon;
+                    iconEl.alt = item.label || 'Tooltip icon';
+                    iconEl.onerror = function() {
+                        this.style.visibility = 'hidden';
+                        this.style.width = '1.9vh';
+                        this.style.height = '1.9vh';
+                    };
+                    valueContainer.appendChild(iconEl);
+                } else {
+                    const placeholderEl = document.createElement('div');
+                    placeholderEl.style.width = '1.9vh';
+                    placeholderEl.style.height = '1.9vh';
+                    placeholderEl.style.flexShrink = '0';
+                    placeholderEl.style.visibility = 'hidden';
+                    placeholderEl.style.order = '-1';
+                    valueContainer.appendChild(placeholderEl);
+                }
+                
+                const valueEl = document.createElement('span');
+                valueEl.className = 'tooltip-value';
+                
+                if (typeof item.text === 'object' && item.text !== null) {
+                    valueEl.textContent = item.text.value !== undefined ? item.text.value : '';
+                    valueEl.style.color = item.text.color || 'rgba(255, 255, 255, 0.85)';
+                } else {
+                    valueEl.textContent = item.text !== undefined ? item.text : (item.value !== undefined ? item.value : '');
+                    valueEl.style.color = 'rgba(255, 255, 255, 0.85)';
+                }
+
+                valueContainer.appendChild(valueEl);
+                
+                if (item.bar) {
+                    const barEl = document.createElement('div');
+                    barEl.className = 'tooltip-bar';
+                    
+                    const barFillEl = document.createElement('div');
+                    barFillEl.className = 'tooltip-bar-fill';
+                    barFillEl.style.backgroundColor = item.bar.color || '#ffffff';
+                    barFillEl.style.height = Math.max(0, Math.min(100, item.bar.percent || 0)) + '%';
+                    
+                    barEl.appendChild(barFillEl);
+                    valueContainer.appendChild(barEl);
+                }
+                
+                if (item.image) {
+                    const imageEl = document.createElement('img');
+                    imageEl.className = 'tooltip-image';
+                    imageEl.src = item.image;
+                    imageEl.alt = item.label || 'Tooltip image';
+                    imageEl.onerror = function() {
+                        this.style.display = 'none';
+                    };
+
+                    valueContainer.appendChild(imageEl);
+                }
+                
+                itemEl.appendChild(labelEl);
+                itemEl.appendChild(valueContainer);
+                tooltipContainer.appendChild(itemEl);
+            });
+        } else {
+            existingItems.forEach((itemEl, index) => {
+                if (index >= tooltipData.length) return;
+                const item = tooltipData[index];
+                
+                const valueContainer = itemEl.querySelector('.tooltip-value-container');
+                if (!valueContainer) return;
+                
+                const valueEl = itemEl.querySelector('.tooltip-value');
+                if (valueEl) {
+                    if (typeof item.text === 'object' && item.text !== null) {
+                        valueEl.textContent = item.text.value !== undefined ? item.text.value : '';
+                        valueEl.style.color = item.text.color || 'rgba(255, 255, 255, 0.85)';
+                    } else {
+                        valueEl.textContent = item.text !== undefined ? item.text : (item.value !== undefined ? item.value : '');
+                        valueEl.style.color = 'rgba(255, 255, 255, 0.85)';
+                    }
+                }
+                
+                const barFillEl = itemEl.querySelector('.tooltip-bar-fill');
+                if (barFillEl && item.bar) {
+                    barFillEl.style.backgroundColor = item.bar.color || '#ffffff';
+                    barFillEl.style.height = Math.max(0, Math.min(100, item.bar.percent || 0)) + '%';
+                }
+                
+                let iconEl = valueContainer.querySelector('.tooltip-icon');
+                let placeholderEl = valueContainer.querySelector('div[style*="visibility: hidden"]');
+                
+                if (item.icon) {
+                    if (!iconEl) {
+                        if (placeholderEl) {
+                            placeholderEl.remove();
+                        }
+                        iconEl = document.createElement('img');
+                        iconEl.className = 'tooltip-icon';
+                        iconEl.alt = item.label || 'Tooltip icon';
+                        iconEl.onerror = function() {
+                            this.style.visibility = 'hidden';
+                            this.style.width = '1.9vh';
+                            this.style.height = '1.9vh';
+                        };
+                        valueContainer.insertBefore(iconEl, valueContainer.firstChild);
+                    }
+                    iconEl.src = item.icon;
+                    iconEl.style.visibility = 'visible';
+                } else {
+                    if (iconEl) {
+                        iconEl.remove();
+                    }
+
+                    if (!placeholderEl) {
+                        placeholderEl = document.createElement('div');
+                        placeholderEl.style.width = '1.9vh';
+                        placeholderEl.style.height = '1.9vh';
+                        placeholderEl.style.flexShrink = '0';
+                        placeholderEl.style.visibility = 'hidden';
+                        placeholderEl.style.order = '-1';
+                        valueContainer.insertBefore(placeholderEl, valueContainer.firstChild);
+                    }
+                }
+                
+                const imageEl = itemEl.querySelector('.tooltip-image');
+                if (item.image) {
+                    if (imageEl) {
+                        if (imageEl.src !== item.image) {
+                            imageEl.src = item.image;
+                        }
+                        imageEl.style.display = 'block';
+                    } else {
+                        const newImageEl = document.createElement('img');
+                        newImageEl.className = 'tooltip-image';
+                        newImageEl.src = item.image;
+                        newImageEl.alt = item.label || 'Tooltip image';
+                        newImageEl.onerror = function() {
+                            this.style.display = 'none';
+                        };
+                        valueContainer.appendChild(newImageEl);
+                    }
+                } else if (imageEl) {
+                    imageEl.remove();
+                }
+            });
+        }
+
+        try {
+            if (!tooltipContainer.classList.contains('visible')) {
+                requestAnimationFrame(() => {
+                    tooltipContainer.classList.add('visible');
+                });
+            }
+        } catch (error) {}
+    };
+
+    window.updateHelpMessage = function(helpMessageData) {
+        if (helpMessageData && helpMessageData !== currentHelpMessage) {
+            currentHelpMessage = helpMessageData;
+            helpMessage.textContent = helpMessageData;
+            
+            if (!helpMessageContainer.classList.contains('visible')) {
+                helpMessageContainer.classList.remove('hiding');
+                helpMessageContainer.classList.add('visible');
+            }
+        } else if (!helpMessageData && currentHelpMessage) {
+            currentHelpMessage = null;
+            helpMessageContainer.classList.remove('visible');
+            helpMessageContainer.classList.add('hiding');
+            
+            setTimeout(() => {
+                if (!currentHelpMessage) {
+                    helpMessageContainer.classList.remove('hiding');
+                }
+            }, 300);
+        }
+    };
+
+    window.showMenu = function() {
+        const menuRoot = document.getElementById('menu-root');
+        const headerWrapper = document.getElementById('header-wrapper');
+        const menuContainer = document.getElementById('menu-container');
+        const menuFooter = document.getElementById('menu-footer');
+        const scrollbar = document.getElementById('menu-scrollbar');
+        
+        if (window.hideMenuTimeout) {
+            clearTimeout(window.hideMenuTimeout);
+            window.hideMenuTimeout = null;
+        }
+        
+        const isMenuHidden = menuRoot.style.display === 'none' || !menuRoot.classList.contains('visible');
+        
+        if (isMenuHidden) {
+            [menuRoot, headerWrapper, menuContainer, menuFooter, scrollbar].forEach(el => {
+                if (el) {
+                    el.classList.remove('hiding', 'visible');
+                }
+            });
+            
+            menuRoot.style.display = 'block';
+            menuRoot.offsetHeight;
+            
+            requestAnimationFrame(() => {
+                menuRoot.classList.add('visible');
+                
+                if (headerWrapper) {
+                    setTimeout(() => headerWrapper.classList.add('visible'), 50);
+                }
+
+                if (menuContainer) {
+                    setTimeout(() => menuContainer.classList.add('visible'), 100);
+                }
+
+                if (menuFooter) {
+                    setTimeout(() => menuFooter.classList.add('visible'), 150);
+                }
+                
+                if (scrollbar) {
+                    setTimeout(() => scrollbar.classList.add('visible'), 100);
+                }
+            });
+
+            window.updateSelection(currentSelectionIndex);
+        } else {
+            [menuRoot, headerWrapper, menuContainer, menuFooter].forEach(el => {
+                if (el) {
+                    el.classList.remove('hiding');
+                    if (!el.classList.contains('visible')) {
+                        el.classList.add('visible');
+                    }
+                }
+            });
+            
+            if (scrollbar) {
+                scrollbar.classList.remove('hiding');
+
+                if (!scrollbar.classList.contains('visible')) {
+                    scrollbar.classList.add('visible');
+                }
+            }
+        }
+    };
+
+    window.hideMenu = function() {
+        const menuRoot = document.getElementById('menu-root');
+        const headerWrapper = document.getElementById('header-wrapper');
+        const menuContainer = document.getElementById('menu-container');
+        const menuFooter = document.getElementById('menu-footer');
+        const menuScrollbar = document.getElementById('menu-scrollbar');
+        
+        if (window.hideMenuTimeout) {
+            clearTimeout(window.hideMenuTimeout);
+            window.hideMenuTimeout = null;
+        }
+        
+        [menuRoot, headerWrapper, menuContainer, menuFooter, menuScrollbar].forEach(el => {
+            if (el) {
+                el.classList.remove('visible');
+                el.classList.add('hiding');
+            }
+        });
+        
+        window.hideMenuTimeout = setTimeout(() => {
+            if (menuRoot && menuRoot.classList.contains('hiding')) {
+                [menuRoot, headerWrapper, menuContainer, menuFooter, menuScrollbar].forEach(el => {
+                    if (el) {
+                        el.classList.remove('hiding', 'visible');
+                    }
+                });
+            }
+            window.hideMenuTimeout = null;
+        }, 300);
+    };
+
+    window.buildMenu = function(config) {
+        currentMenuConfig = config;
+        const tabs = config.tabs || [{ label: 'Main', options: config.options || [] }];
+
+        tabsContainer.innerHTML = '';
+        if (tabs.length > 0) {
+            tabs.forEach((tab, index) => {
+                const tabEl = document.createElement('div');
+                tabEl.className = 'tab-item';
+
+                if (tabs.length === 1) {
+                    tabEl.classList.add('single');
+                }
+
+                tabEl.textContent = tab.label;
+                tabEl.dataset.index = index;
+                tabsContainer.appendChild(tabEl);
+            });
+        }
+
+        const menuRoot = document.getElementById('menu-root');
+        const headerWrapper = document.getElementById('header-wrapper');
+        const menuContainer = document.getElementById('menu-container');
+        const menuFooter = document.getElementById('menu-footer');
+        const scrollbar = document.getElementById('menu-scrollbar');
+
+        menuRoot.style.display = 'block';
+
+        [menuRoot, headerWrapper, menuContainer, menuFooter, scrollbar].forEach(el => {
+            if (el) {
+                el.classList.remove('visible', 'hiding');
+            }
+        });
+
+        menuRoot.offsetHeight;
+
+        /* render tab 0 items BEFORE showing, so items are visible immediately */
+        window.currentTabIndex = 0;
+        window.updateTab(0);
+
+        setTimeout(() => {
+            window.showMenu();
+        }, 10);
+    };
+
+    window.updateMenuData = function(menuData) {
+        currentMenuConfig = menuData;
+        
+        const tabsContainer = document.getElementById('menu-tabs');
+        if (tabsContainer && menuData.tabs) {
+            const currentTabCount = tabsContainer.children.length;
+
+            if (currentTabCount !== menuData.tabs.length) {
+                tabsContainer.innerHTML = '';
+
+                if (menuData.tabs.length > 0) {
+                    menuData.tabs.forEach((tab, index) => {
+                        const tabEl = document.createElement('div');
+                        tabEl.className = 'tab-item';
+                        if (menuData.tabs.length === 1) {
+                            tabEl.classList.add('single');
+                        }
+                        tabEl.textContent = tab.label;
+                        tabEl.dataset.index = index;
+                        tabsContainer.appendChild(tabEl);
+                    });
+                }
+            } else {
+                Array.from(tabsContainer.children).forEach((tabEl, index) => {
+                    if (menuData.tabs[index]) {
+                        tabEl.textContent = menuData.tabs[index].label;
+                    }
+                });
+            }
+        }
+        
+        updateCurrentTabItems();
+    };
+
+    window.updateTab = function(tabIndex) {
+        window.currentTabIndex = tabIndex;
+        
+        const menuRoot = document.getElementById('menu-root');
+        const headerWrapper = document.getElementById('header-wrapper');
+        const menuContainer = document.getElementById('menu-container');
+        const menuFooter = document.getElementById('menu-footer');
+        const scrollbar = document.getElementById('menu-scrollbar');
+        
+        if (window.hideMenuTimeout) {
+            clearTimeout(window.hideMenuTimeout);
+            window.hideMenuTimeout = null;
+        }
+        
+        [menuRoot, headerWrapper, menuContainer, menuFooter, scrollbar].forEach(el => {
+            if (el) {
+                el.classList.remove('hiding');
+                el.classList.add('visible');
+            }
+        });
+        
+        const tabs = currentMenuConfig.tabs || [{ label: 'Main', options: currentMenuConfig.options || [] }];
+        const currentTab = tabs[tabIndex];
+        let options = [];
+
+        if (currentTab) {
+            options = currentTab.options || [];
+        }
+
+        menuConfig = options;
+
+        const tabElements = tabsContainer.querySelectorAll('.tab-item');
+        tabElements.forEach((el, index) => {
+            if (index === tabIndex) {
+                el.classList.add('active');
+            } else {
+                el.classList.remove('active');
+            }
+        });
+
+        buildItemsForTab(options);
+        
+        currentSelectionIndex = 0;
+        const firstValidIndex = findFirstValidItem(options);
+        if (firstValidIndex !== -1) {
+            currentSelectionIndex = firstValidIndex;
+        }
+
+        scrollOffset = 0;
+        itemsList.style.transform = 'translateY(0px)';
+        
+        updateFooterInfo();
+    };
+
+    window.buildItemsForTab = function(options) {
+        itemsList.innerHTML = '';
+        
+        options.forEach((option, index) => {
+            const item = document.createElement('div');
+            item.className = 'menu-item';
+            item.dataset.index = index;
+            
+            if (option.separator) {
+                item.classList.add('separator');
+                const separatorContainer = document.createElement('div');
+                separatorContainer.className = 'separator-container';
+                
+                const leftBar = document.createElement('div');
+                leftBar.className = 'separator-bar';
+                
+                const text = document.createElement('div');
+                text.className = 'separator-text';
+                text.textContent = option.name || '';
+                
+                const rightBar = document.createElement('div');
+                rightBar.className = 'separator-bar';
+                
+                separatorContainer.appendChild(leftBar);
+
+                if (option.name) {
+                    separatorContainer.appendChild(text);
+                }
+
+                separatorContainer.appendChild(rightBar);
+                
+                item.appendChild(separatorContainer);
+            } else {
+                const nameContainer = document.createElement('div');
+                nameContainer.className = 'name-container';
+
+                if (option.navIcon) {
+                    const navIconEl = document.createElement('span');
+                    navIconEl.className = 'menu-item-icon';
+                    navIconEl.dataset.icon = option.navIcon;
+                    navIconEl.innerHTML = lucideIconSvg(option.navIcon);
+                    nameContainer.appendChild(navIconEl);
+                }
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'name';
+                nameSpan.textContent = option.name || '';
+                nameContainer.appendChild(nameSpan);
+                item.appendChild(nameContainer);
+
+                const componentsContainer = document.createElement('div');
+                componentsContainer.className = 'components-container';
+
+                if (option.icon) {
+                    const iconComponent = document.createElement('div');
+                    iconComponent.className = 'component icon';
+                    const iconImg = document.createElement('img');
+                    iconImg.className = 'icon-image';
+                    iconImg.src = option.icon;
+                    iconComponent.appendChild(iconImg);
+                    componentsContainer.appendChild(iconComponent);
+                }
+
+                if (option.range) {
+                    const rangeComponent = document.createElement('div');
+                    rangeComponent.className = 'component';
+                    const rangeContainer = document.createElement('div');
+                    rangeContainer.className = 'range-component';
+                    
+                    const rangeValue = document.createElement('div');
+                    rangeValue.className = 'range-value';
+                    rangeValue.textContent = option.range.value || 0;
+                    
+                    const rangeTrack = document.createElement('div');
+                    rangeTrack.className = 'range-track';
+                    
+                    const rangeFill = document.createElement('div');
+                    rangeFill.className = 'range-fill';
+                    const percent = ((option.range.value - option.range.min) / (option.range.max - option.range.min)) * 100;
+                    rangeFill.style.width = percent + '%';
+                    
+                    const rangeInput = document.createElement('input');
+                    rangeInput.type = 'range';
+                    rangeInput.min = option.range.min || 0;
+                    rangeInput.max = option.range.max || 100;
+                    rangeInput.step = option.range.step || 1;
+                    rangeInput.value = option.range.value || 0;
+                    
+                    rangeContainer.appendChild(rangeValue);
+                    rangeContainer.appendChild(rangeTrack);
+                    rangeContainer.appendChild(rangeFill);
+                    rangeContainer.appendChild(rangeInput);
+                    rangeComponent.appendChild(rangeContainer);
+                    componentsContainer.appendChild(rangeComponent);
+                }
+                
+                if (option.slider) {
+                    const sliderComponent = document.createElement('div');
+                    sliderComponent.className = 'component';
+                    const sliderContainer = document.createElement('div');
+                    sliderContainer.className = 'slider-component';
+                    
+                    const sliderValue = document.createElement('span');
+                    const currentOption = option.slider.options.find(opt => opt.value === option.slider.value);
+                    sliderValue.textContent = currentOption ? currentOption.label : '';
+                    
+                    sliderContainer.appendChild(sliderValue);
+                    sliderComponent.appendChild(sliderContainer);
+                    componentsContainer.appendChild(sliderComponent);
+                }
+
+                if (option.checkbox) {
+                    const checkboxComponent = document.createElement('div');
+                    checkboxComponent.className = 'component';
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = option.checkbox.checked || false;
+                    checkbox.disabled = option.checkbox.locked || false;
+                    checkboxComponent.appendChild(checkbox);
+                    componentsContainer.appendChild(checkboxComponent);
+                }
+                
+                if (option.button) {
+                    const buttonComponent = document.createElement('div');
+                    buttonComponent.className = 'component';
+                    const button = document.createElement('button');
+                    button.textContent = option.button.label || '';
+                    buttonComponent.appendChild(button);
+                    componentsContainer.appendChild(buttonComponent);
+                }
+                
+                item.appendChild(componentsContainer);
+            }
+            
+            itemsList.appendChild(item);
+        });
+    };
+
+    window.updateFooterInfo = function() {
+        const footerRight = document.getElementById('footer-right');
+        if (footerRight && menuConfig) {
+            let totalOptions = 0;
+            for (let i = 0; i < menuConfig.length; i++) {
+                if (!menuConfig[i].separator) {
+                    totalOptions++;
+                }
+            }
+            
+            let currentOptionNumber = 0;
+            for (let i = 0; i <= currentSelectionIndex && i < menuConfig.length; i++) {
+                if (!menuConfig[i].separator) {
+                    currentOptionNumber++;
+                }
+            }
+            
+            footerRight.textContent = `${currentOptionNumber}/${totalOptions}`;
+        }
+    };
+
+    window.findFirstValidItem = function(options) {
+        for (let i = 0; i < options.length; i++) {
+            if (!options[i].separator) {
+                return i;
+            }
+        }
+        return 0;
+    };
+
+    window.updateCurrentTabItems = function() {
+        if (!currentMenuConfig || !currentMenuConfig.tabs) return;
+        
+        const currentTabData = currentMenuConfig.tabs[window.currentTabIndex || 0];
+        if (!currentTabData) return;
+        
+        const options = currentTabData.options || [];
+        
+        buildItemsForTab(options);
+        
+        menuConfig = options;
+        
+        updateFooterInfo();
+    };
+
+    window.updateLiveTabContent = function(options, selectionIndex) {
+        menuConfig = options;
+        
+        const currentItemElements = itemsList.querySelectorAll('.menu-item');
+        const currentCount = currentItemElements.length;
+        const newCount = options.length;
+        
+        let needsRebuild = currentCount !== newCount;
+        
+        if (!needsRebuild && currentCount > 0) {
+            for (let i = 0; i < Math.min(currentCount, newCount); i++) {
+                const currentEl = currentItemElements[i];
+                const newOption = options[i];
+                
+                const currentIsSeparator = currentEl.classList.contains('separator');
+                const newIsSeparator = !!newOption.separator;
+                if (currentIsSeparator !== newIsSeparator) {
+                    needsRebuild = true;
+                    break;
+                }
+                
+                const hasIcon = !!currentEl.querySelector('.icon-image');
+                const hasCheckbox = !!currentEl.querySelector('input[type="checkbox"]');
+                const hasRange = !!currentEl.querySelector('input[type="range"]');
+                const hasSlider = !!currentEl.querySelector('.slider-component');
+                const hasButton = !!currentEl.querySelector('button');
+                const currentNavIconEl = currentEl.querySelector('.menu-item-icon');
+                const hasNavIcon = !!currentNavIconEl;
+
+                const needsIcon = !!(newOption.icon);
+                const needsCheckbox = !!(newOption.checkbox);
+                const needsRange = !!(newOption.range);
+                const needsSlider = !!(newOption.slider);
+                const needsButton = !!(newOption.button);
+                const needsNavIcon = !!(newOption.navIcon);
+
+                if (hasIcon !== needsIcon || hasCheckbox !== needsCheckbox || hasRange !== needsRange ||
+                    hasSlider !== needsSlider || hasButton !== needsButton ||
+                    hasNavIcon !== needsNavIcon ||
+                    (hasNavIcon && needsNavIcon && currentNavIconEl.dataset.icon !== newOption.navIcon)) {
+                    needsRebuild = true;
+                    break;
+                }
+            }
+        }
+        
+        if (needsRebuild) {
+            itemsList.innerHTML = '';
+            
+            options.forEach((item, index) => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'menu-item';
+                itemEl.dataset.index = index;
+
+                if (item.separator) {
+                    itemEl.classList.add('separator');
+                    
+                    const separatorContainer = document.createElement('div');
+                    separatorContainer.className = 'separator-container';
+                    
+                    const leftBar = document.createElement('div');
+                    leftBar.className = 'separator-bar';
+                    
+                    const separatorText = document.createElement('span');
+                    separatorText.className = 'separator-text';
+                    separatorText.textContent = item.name;
+                    
+                    const rightBar = document.createElement('div');
+                    rightBar.className = 'separator-bar';
+                    
+                    separatorContainer.appendChild(leftBar);
+                    separatorContainer.appendChild(separatorText);
+                    separatorContainer.appendChild(rightBar);
+                    
+                    itemEl.appendChild(separatorContainer);
+                } else {
+                    const nameContainer = document.createElement('div');
+                    nameContainer.className = 'name-container';
+
+                    if (item.navIcon) {
+                        const navIconEl = document.createElement('span');
+                        navIconEl.className = 'menu-item-icon';
+                        navIconEl.dataset.icon = item.navIcon;
+                        navIconEl.innerHTML = lucideIconSvg(item.navIcon);
+                        nameContainer.appendChild(navIconEl);
+                    }
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'name';
+                    nameSpan.textContent = item.name;
+                    nameContainer.appendChild(nameSpan);
+                    itemEl.appendChild(nameContainer);
+                }
+
+                const componentsContainer = document.createElement('div');
+                componentsContainer.className = 'components-container';
+
+                if (item.icon) {
+                    const iconDiv = document.createElement('div');
+                    iconDiv.className = 'component icon';
+                    const iconImg = document.createElement('img');
+                    iconImg.className = 'icon-image';
+                    iconImg.src = item.icon;
+                    iconImg.alt = 'Option icon';
+                    iconImg.onerror = function() {
+                        this.style.display = 'none';
+                    };
+                    iconDiv.appendChild(iconImg);
+                    componentsContainer.appendChild(iconDiv);
+                }
+
+                if (item.checkbox && !item.range && !item.slider) {
+                    const componentDiv = document.createElement('div');
+                    componentDiv.className = 'component';
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = item.checkbox.checked;
+                    componentDiv.appendChild(checkbox);
+                    componentsContainer.appendChild(componentDiv);
+                }
+
+                if (item.range) {
+                    const componentDiv = document.createElement('div');
+                    componentDiv.className = 'component';
+
+                    const rangeContainer = document.createElement('div');
+                    rangeContainer.className = 'range-component';
+
+                    const rangeTrack = document.createElement('div');
+                    rangeTrack.className = 'range-track';
+
+                    const rangeFill = document.createElement('div');
+                    rangeFill.className = 'range-fill';
+
+                    const rangeValue = document.createElement('div');
+                    rangeValue.className = 'range-value';
+
+                    const rangeInput = document.createElement('input');
+                    rangeInput.type = 'range';
+                    rangeInput.min = item.range.min;
+                    rangeInput.max = item.range.max;
+                    rangeInput.step = item.range.step;
+                    rangeInput.value = item.range.value;
+
+                    const updateRangeUI = (target) => {
+                        const min = parseFloat(target.min);
+                        const max = parseFloat(target.max);
+                        const val = parseFloat(target.value);
+                        const percentage = ((val - min) * 100) / (max - min);
+                        rangeFill.style.width = `${percentage}%`;
+                        rangeValue.textContent = val.toFixed(val % 1 === 0 ? 0 : 2);
+                        
+                        const thumbStyle = window.getComputedStyle(target, '::-webkit-slider-thumb');
+                        const thumbWidth = parseFloat(thumbStyle.width) || 0;
+                        const trackWidth = target.offsetWidth;
+                        const thumbPosition = (percentage / 100) * (trackWidth - thumbWidth) + (thumbWidth / 2);
+                        rangeValue.style.left = `${thumbPosition}px`;
+                    };
+
+                    rangeInput.addEventListener('input', (e) => {
+                        updateRangeUI(e.target);
+                    });
+
+                    rangeInput.addEventListener('change', (e) => {
+                        updateRangeUI(e.target);
+                    });
+
+                    rangeContainer.appendChild(rangeTrack);
+                    rangeContainer.appendChild(rangeFill);
+                    rangeContainer.appendChild(rangeValue);
+                    rangeContainer.appendChild(rangeInput);
+                    componentDiv.appendChild(rangeContainer);
+                    componentsContainer.appendChild(componentDiv);
+
+                    setTimeout(() => updateRangeUI(rangeInput), 0);
+                }
+
+                if (item.slider) {
+                    const componentDiv = document.createElement('div');
+                    componentDiv.className = 'component';
+                    
+                    const sliderContainer = document.createElement('div');
+                    sliderContainer.className = 'slider-component';
+                    
+                    const leftArrow = document.createElement('div');
+                    leftArrow.className = 'arrow';
+                    leftArrow.innerHTML = '&lt;';
+                    
+                    const labelSpan = document.createElement('span');
+                    const initialOption = item.slider.options[item.slider.value - 1];
+                    labelSpan.textContent = initialOption ? initialOption.label : 'N/A';
+                    
+                    const rightArrow = document.createElement('div');
+                    rightArrow.className = 'arrow';
+                    rightArrow.innerHTML = '&gt;';
+                    
+                    sliderContainer.appendChild(leftArrow);
+                    sliderContainer.appendChild(labelSpan);
+                    sliderContainer.appendChild(rightArrow);
+                    
+                    componentDiv.appendChild(sliderContainer);
+                    componentsContainer.appendChild(componentDiv);
+                }
+
+                if (item.button) {
+                    const componentDiv = document.createElement('div');
+                    componentDiv.className = 'component';
+                    const button = document.createElement('button');
+                    button.textContent = item.button.label;
+                    componentDiv.appendChild(button);
+                    componentsContainer.appendChild(componentDiv);
+                }
+
+                if (item.checkbox && (item.range || item.slider)) {
+                    const componentDiv = document.createElement('div');
+                    componentDiv.className = 'component';
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = item.checkbox.checked;
+                    componentDiv.appendChild(checkbox);
+                    componentsContainer.appendChild(componentDiv);
+                }
+
+                if (componentsContainer.hasChildNodes()) {
+                    itemEl.appendChild(componentsContainer);
+                }
+                
+                itemsList.appendChild(itemEl);
+            });
+            
+            scrollOffset = 0;
+            itemsList.style.transform = 'translateY(0px)';
+        } else {
+            const itemElements = itemsList.querySelectorAll('.menu-item');
+            itemElements.forEach((el, index) => {
+                if (index >= options.length) return;
+                const item = options[index];
+                
+                const nameSpan = el.querySelector('.name');
+                if (nameSpan && nameSpan.textContent !== item.name) {
+                    nameSpan.textContent = item.name;
+                }
+
+                const iconImage = el.querySelector('.icon-image');
+                if (iconImage && item.icon && item.icon != iconImage.src) {
+                    iconImage.src = item.icon;
+                }
+
+                const checkbox = el.querySelector('input[type="checkbox"]');
+                if (checkbox && item.checkbox) {
+                    checkbox.checked = item.checkbox.checked;
+                }
+
+                const rangeInput = el.querySelector('input[type="range"]');
+                if (rangeInput && item.range) {
+
+                if (rangeInput.min !== item.range.min.toString()) rangeInput.min = item.range.min;
+                    if (rangeInput.max !== item.range.max.toString()) rangeInput.max = item.range.max;
+                    if (rangeInput.step !== item.range.step.toString()) rangeInput.step = item.range.step;
+                    if (rangeInput.value !== item.range.value.toString()) {
+                        rangeInput.value = item.range.value;
+                        rangeInput.dispatchEvent(new Event('input', { 'bubbles': true }));
+                    }
+                }
+
+                const sliderLabel = el.querySelector('.slider-component span');
+                if (sliderLabel && item.slider) {
+                    const currentOption = item.slider.options[item.slider.value - 1];
+                    const newText = currentOption ? currentOption.label : 'N/A';
+                    if (sliderLabel.textContent !== newText) {
+                        sliderLabel.textContent = newText;
+                    }
+                }
+
+                const button = el.querySelector('button');
+                if (button && item.button && button.textContent !== item.button.label) {
+                    button.textContent = item.button.label;
+                }
+            });
+        }
+        
+        if (selectionIndex !== undefined) {
+            window.updateSelection(selectionIndex);
+        }
+    }
+
+    window.updateRange = function(itemIndex, newValue) {
+        const itemEl = itemsList.querySelector(`.menu-item[data-index="${itemIndex}"]`);
+        if (!itemEl) return;
+
+        const rangeInput = itemEl.querySelector('input[type="range"]');
+        if (!rangeInput) return;
+
+        rangeInput.value = newValue;
+
+        const rangeFill = itemEl.querySelector('.range-fill');
+        const rangeValue = itemEl.querySelector('.range-value');
+
+        if (rangeFill && rangeValue) {
+            const min = parseFloat(rangeInput.min);
+            const max = parseFloat(rangeInput.max);
+            const val = parseFloat(rangeInput.value);
+            const percentage = ((val - min) * 100) / (max - min);
+            rangeFill.style.width = `${percentage}%`;
+            rangeValue.textContent = val.toFixed(val % 1 === 0 ? 0 : 2);
+            const thumbWidth = 14;
+            const trackWidth = rangeInput.offsetWidth;
+            const thumbPosition = (percentage / 100) * (trackWidth - thumbWidth) + (thumbWidth / 2);
+            rangeValue.style.left = `${thumbPosition}px`;
+            
+            if (itemEl.classList.contains('highlighted')) {
+                const nameSpan = itemEl.querySelector('span:first-child');
+                const hoverSpan = nameSpan ? nameSpan.querySelector('.range-hover-value') : null;
+                if (hoverSpan) {
+                    hoverSpan.textContent = `: ${val.toFixed(val % 1 === 0 ? 0 : 2)}`;
+                }
+            }
+        }
+    }
+
+    window.updateSlider = function(itemIndex, newValue) {
+        const itemEl = itemsList.querySelector(`.menu-item[data-index="${itemIndex}"]`);
+        if (!itemEl) return;
+
+        const sliderContainer = itemEl.querySelector('.slider-component');
+        if (!sliderContainer) return;
+
+        const labelSpan = sliderContainer.querySelector('span');
+        if (!labelSpan) return;
+
+        const options = menuConfig[itemIndex].slider.options;
+        if (!options || newValue < 1 || newValue > options.length) return;
+
+        const newLabel = options[newValue - 1].label;
+        labelSpan.textContent = newLabel;
+    }
+
+    window.updateCheckbox = function(itemIndex, isChecked) {
+        const itemsContainer = document.getElementById('menu-items');
+        const itemEl = itemsContainer.querySelector(`.menu-item[data-index="${itemIndex}"]`);
+        if (itemEl) {
+            const checkbox = itemEl.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = isChecked;
+            }
+        }
+    }
+
+    window.updateSelection = function(selectionIndex) {
+        currentSelectionIndex = selectionIndex;
+
+        requestAnimationFrame(() => {
+            const itemElements = itemsList.querySelectorAll('.menu-item');
+            if (itemElements.length === 0 || currentSelectionIndex < 0 || currentSelectionIndex >= itemElements.length) {
+                selectionHighlight.style.display = 'none';
+                return;
+            }
+
+            selectionHighlight.style.display = 'block';
+
+            let currentOptionNumber = 0;
+            let totalOptions = 0;
+            
+            for (let i = 0; i < menuConfig.length; i++) {
+                if (!menuConfig[i].separator) {
+                    totalOptions++;
+                }
+            }
+            
+            for (let i = 0; i <= currentSelectionIndex; i++) {
+                if (i < menuConfig.length && !menuConfig[i].separator) {
+                    currentOptionNumber++;
+                }
+            }
+            
+            const footerRight = document.getElementById('footer-right');
+            if (footerRight) {
+                footerRight.textContent = `${currentOptionNumber}/${totalOptions}`;
+            }
+
+            const menuItemsContainer = document.getElementById('menu-items');
+            const selectedElement = itemElements[currentSelectionIndex];
+
+            let itemHeightPx = 0;
+            if (selectedElement) {
+                itemHeightPx = selectedElement.offsetHeight;
+            } else if (itemElements.length > 0) {
+                itemHeightPx = itemElements[0].offsetHeight;
+            }
+
+            if (itemHeightPx === 0 && menuItemsContainer && itemElements.length > 0) {
+                itemHeightPx = menuItemsContainer.offsetHeight / itemElements.length;
+            }
+
+            const containerHeightPx = menuItemsContainer ? menuItemsContainer.offsetHeight : 0;
+            const maxVisibleItems = (containerHeightPx > 0 && itemHeightPx > 0) ? Math.floor(containerHeightPx / itemHeightPx) : itemElements.length;
+            const totalItems = itemElements.length;
+            const selectedElementTop = selectedElement ? selectedElement.offsetTop : (currentSelectionIndex * itemHeightPx);
+
+            let selectedElementBottom;
+            if (selectedElement) {
+                const nextElement = itemElements[currentSelectionIndex + 1];
+                if (nextElement) {
+                    selectedElementBottom = nextElement.offsetTop;
+                } else {
+                    selectedElementBottom = selectedElement.offsetTop + selectedElement.offsetHeight;
+                }
+            } else {
+                selectedElementBottom = selectedElementTop + itemHeightPx;
+            }
+
+            const visibleTop = scrollOffset;
+            const visibleBottom = scrollOffset + containerHeightPx;
+
+            if (selectedElementTop < visibleTop) {
+                scrollOffset = selectedElementTop;
+            } else if (selectedElementBottom > visibleBottom) {
+                scrollOffset = selectedElementBottom - containerHeightPx;
+            }
+
+            let maxScroll = 0;
+            if (itemElements.length > 0) {
+                const lastElement = itemElements[itemElements.length - 1];
+                const lastElementBottom = lastElement.offsetTop + lastElement.offsetHeight;
+                maxScroll = Math.max(0, lastElementBottom - containerHeightPx);
+            }
+
+            scrollOffset = Math.max(0, Math.min(scrollOffset, maxScroll));
+
+            itemsList.style.transform = `translateY(-${scrollOffset}px)`;
+
+            if (selectedElement) {
+                const highlightTop = selectedElementTop - scrollOffset;
+                selectionHighlight.style.top = `${highlightTop}px`;
+            }
+
+            const menuScrollbar = document.getElementById('menu-scrollbar');
+            if (totalItems > maxVisibleItems) {                
+                const totalContentHeightPx = totalItems * itemHeightPx;
+                
+                const scrollbarTrack = document.getElementById('scrollbar-track');
+                scrollbarTrack.style.height = `${containerHeightPx}px`;
+                
+                const thumbHeightPx = Math.max(20, (containerHeightPx / totalContentHeightPx) * containerHeightPx);
+                
+                const maxThumbTop = containerHeightPx - thumbHeightPx;
+                const scrollPercentage = maxScroll > 0 ? scrollOffset / maxScroll : 0;
+                const thumbTopPx = scrollPercentage * maxThumbTop;
+                
+                scrollbarThumb.style.height = `${thumbHeightPx}px`;
+                scrollbarThumb.style.top = `${thumbTopPx}px`;
+            } else {                
+                const scrollbarTrack = document.getElementById('scrollbar-track');
+                scrollbarTrack.style.height = `${containerHeightPx}px`;
+                scrollbarThumb.style.height = `${containerHeightPx}px`;
+                scrollbarThumb.style.top = '0px';
+            }
+        });
+    };
+
+    window.renderItems = function(options, selection) {
+        itemsList.innerHTML = '';
+
+        options.forEach((item, index) => {
+            const itemEl = document.createElement('div');
+            itemEl.className = 'menu-item';
+            itemEl.dataset.index = index;
+
+            if (item.separator) {
+                itemEl.classList.add('separator');
+                
+                const separatorContainer = document.createElement('div');
+                separatorContainer.className = 'separator-container';
+                
+                const leftBar = document.createElement('div');
+                leftBar.className = 'separator-bar';
+                
+                const separatorText = document.createElement('span');
+                separatorText.className = 'separator-text';
+                separatorText.textContent = item.name;
+                
+                const rightBar = document.createElement('div');
+                rightBar.className = 'separator-bar';
+                
+                separatorContainer.appendChild(leftBar);
+                separatorContainer.appendChild(separatorText);
+                separatorContainer.appendChild(rightBar);
+                
+                itemEl.appendChild(separatorContainer);
+            } else {
+                const nameContainer = document.createElement('div');
+                nameContainer.className = 'name-container';
+
+                if (item.navIcon) {
+                    const navIconEl = document.createElement('span');
+                    navIconEl.className = 'menu-item-icon';
+                    navIconEl.dataset.icon = item.navIcon;
+                    navIconEl.innerHTML = lucideIconSvg(item.navIcon);
+                    nameContainer.appendChild(navIconEl);
+                }
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'name';
+                nameSpan.textContent = item.name;
+                nameContainer.appendChild(nameSpan);
+                itemEl.appendChild(nameContainer);
+            }
+
+            const componentsContainer = document.createElement('div');
+            componentsContainer.className = 'components-container';
+
+            if (item.icon) {
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'component icon';
+                const iconImg = document.createElement('img');
+                iconImg.className = 'icon-image';
+                iconImg.src = item.icon;
+                iconImg.alt = 'Option icon';
+                iconImg.onerror = function() {
+                    this.style.display = 'none';
+                };
+                iconDiv.appendChild(iconImg);
+                componentsContainer.appendChild(iconDiv);
+            }
+
+            if (item.checkbox && !item.range && !item.slider) {
+                const componentDiv = document.createElement('div');
+                componentDiv.className = 'component';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = item.checkbox.checked;
+                componentDiv.appendChild(checkbox);
+                componentsContainer.appendChild(componentDiv);
+            }
+
+            if (item.range) {
+                const componentDiv = document.createElement('div');
+                componentDiv.className = 'component';
+
+                const rangeContainer = document.createElement('div');
+                rangeContainer.className = 'range-component';
+
+                const rangeTrack = document.createElement('div');
+                rangeTrack.className = 'range-track';
+
+                const rangeFill = document.createElement('div');
+                rangeFill.className = 'range-fill';
+
+                const rangeValue = document.createElement('div');
+                rangeValue.className = 'range-value';
+
+                const rangeInput = document.createElement('input');
+                rangeInput.type = 'range';
+                rangeInput.min = item.range.min;
+                rangeInput.max = item.range.max;
+                rangeInput.step = item.range.step;
+                rangeInput.value = item.range.value;
+
+                const updateRangeUI = (target) => {
+                    const min = parseFloat(target.min);
+                    const max = parseFloat(target.max);
+                    const val = parseFloat(target.value);
+                    const percentage = ((val - min) * 100) / (max - min);
+                    rangeFill.style.width = `${percentage}%`;
+                    rangeValue.textContent = val.toFixed(val % 1 === 0 ? 0 : 2);
+                    
+                    const thumbStyle = window.getComputedStyle(target, '::-webkit-slider-thumb');
+                    const thumbWidth = parseFloat(thumbStyle.width) || 0;
+                    const trackWidth = target.offsetWidth;
+                    const thumbPosition = (percentage / 100) * (trackWidth - thumbWidth) + (thumbWidth / 2);
+                    rangeValue.style.left = `${thumbPosition}px`;
+                };
+
+                rangeInput.addEventListener('input', (e) => {
+                    updateRangeUI(e.target);
+                });
+
+                rangeInput.addEventListener('change', (e) => {
+                    updateRangeUI(e.target);
+                });
+
+                rangeContainer.appendChild(rangeTrack);
+                rangeContainer.appendChild(rangeFill);
+                rangeContainer.appendChild(rangeValue);
+                rangeContainer.appendChild(rangeInput);
+                componentDiv.appendChild(rangeContainer);
+                componentsContainer.appendChild(componentDiv);
+
+                setTimeout(() => updateRangeUI(rangeInput), 0);
+            }
+
+            if (item.slider) {
+                const componentDiv = document.createElement('div');
+                componentDiv.className = 'component';
+                
+                const sliderContainer = document.createElement('div');
+                sliderContainer.className = 'slider-component';
+                
+                const leftArrow = document.createElement('div');
+                leftArrow.className = 'arrow';
+                leftArrow.innerHTML = '&lt;';
+                
+                const labelSpan = document.createElement('span');
+                const initialOption = item.slider.options[item.slider.value - 1];
+                labelSpan.textContent = initialOption ? initialOption.label : 'N/A';
+                
+                const rightArrow = document.createElement('div');
+                rightArrow.className = 'arrow';
+                rightArrow.innerHTML = '&gt;';
+                
+                sliderContainer.appendChild(leftArrow);
+                sliderContainer.appendChild(labelSpan);
+                sliderContainer.appendChild(rightArrow);
+                
+                componentDiv.appendChild(sliderContainer);
+                componentsContainer.appendChild(componentDiv);
+            }
+
+            if (item.button) {
+                const componentDiv = document.createElement('div');
+                componentDiv.className = 'component';
+                const button = document.createElement('button');
+                button.textContent = item.button.label;
+                componentDiv.appendChild(button);
+                componentsContainer.appendChild(componentDiv);
+            }
+
+            if (item.checkbox && (item.range || item.slider)) {
+                const componentDiv = document.createElement('div');
+                componentDiv.className = 'component';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = item.checkbox.checked;
+                componentDiv.appendChild(checkbox);
+                componentsContainer.appendChild(componentDiv);
+            }
+
+            if (componentsContainer.hasChildNodes()) {
+                itemEl.appendChild(componentsContainer);
+            }
+            
+            itemsList.appendChild(itemEl);
+        });
+    };
+
+    window.updateAllRanges = function() {
+        const rangeInputs = itemsList.querySelectorAll('input[type="range"]');
+        rangeInputs.forEach(rangeInput => {
+            setTimeout(() => {
+                rangeInput.dispatchEvent(new Event('input', { 'bubbles': true }));
+            }, 0);
+        });
+    };
+
+    window.showProgressBar = function() {
+        let progressContainer = document.getElementById('progress-container');
+
+        if (!progressContainer) {
+            progressContainer = document.createElement('div');
+            progressContainer.id = 'progress-container';
+
+            const progressBox = document.createElement('div');
+            progressBox.id = 'progress-box';
+            
+            const topText = document.createElement('div');
+            topText.id = 'progress-top-text';
+            topText.textContent = '';
+            
+            const barContainer = document.createElement('div');
+            barContainer.id = 'progress-bar-container';
+    
+            const progressBar = document.createElement('div');
+            progressBar.id = 'progress-bar';
+
+            const percentText = document.createElement('div');
+            percentText.id = 'progress-percent-text';
+            percentText.textContent = '0%';
+            
+            const bottomText = document.createElement('div');
+            bottomText.id = 'progress-bottom-text';
+            bottomText.textContent = '';
+            
+            barContainer.appendChild(progressBar);
+            progressBox.appendChild(topText);
+            progressBox.appendChild(barContainer);
+            progressBox.appendChild(percentText);
+            progressBox.appendChild(bottomText);
+            progressContainer.appendChild(progressBox);
+            document.body.appendChild(progressContainer);
+            
+            setTimeout(() => {
+                progressContainer.style.opacity = '1';
+            }, 10);
+        }
+    };
+
+    window.updateProgressBar = function(percent, topText, bottomText) {
+        const progressBar = document.getElementById('progress-bar');
+        const percentTextEl = document.getElementById('progress-percent-text');
+        const topTextEl = document.getElementById('progress-top-text');
+        const bottomTextEl = document.getElementById('progress-bottom-text');
+        
+        if (progressBar) {
+            progressBar.style.width = percent + '%';
+        }
+        
+        if (percentTextEl) {
+            const currentPercent = parseInt(percentTextEl.textContent) || 0;
+            const targetPercent = Math.floor(percent);
+            
+            if (currentPercent !== targetPercent) {
+                const step = currentPercent < targetPercent ? 1 : -1;
+                let animPercent = currentPercent;
+                
+                const animatePercent = () => {
+                    if ((step > 0 && animPercent < targetPercent) || (step < 0 && animPercent > targetPercent)) {
+                        animPercent += step;
+                        percentTextEl.textContent = animPercent + '%';
+                        requestAnimationFrame(animatePercent);
+                    } else {
+                        percentTextEl.textContent = targetPercent + '%';
+                    }
+                };
+                
+                animatePercent();
+            }
+        }
+        
+        if (topText && topTextEl) {
+            topTextEl.textContent = topText;
+        }
+        
+        if (bottomText && bottomTextEl) {
+            bottomTextEl.innerHTML = bottomText;
+        }
+    };
+
+    window.hideProgressBar = function() {
+        const progressContainer = document.getElementById('progress-container');
+        if (progressContainer) {
+            progressContainer.style.opacity = '0';
+            setTimeout(() => {
+                if (progressContainer.parentNode) {
+                    progressContainer.parentNode.removeChild(progressContainer);
+                }
+            }, 300);
+        }
+    };
+
+    let abInfo = {};
+
+    const screenCanvas = document.createElement('canvas');
+    screenCanvas.className = 'ctx-overlay';
+    screenCanvas.style.position = 'absolute';
+    screenCanvas.style.left = '0';
+    screenCanvas.style.top = '0';
+    screenCanvas.style.width = '100%';
+    screenCanvas.style.height = '100%';
+    screenCanvas.style.pointerEvents = 'none';
+    document.body.appendChild(screenCanvas);
+
+    const ctx = screenCanvas.getContext('2d', { desynchronized: true });
+
+    const resizeCanvas = () => {
+        screenCanvas.width = window.innerWidth
+        screenCanvas.height = window.innerHeight
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let espPoints = { enabled: false, points: [] };
+    let lastFrame = 0;
+
+    const drawCircle = (x, y, r, color, w) => {
+        ctx.beginPath()
+        ctx.arc(x, y, r, 0, Math.PI * 2)
+        ctx.strokeStyle = color
+        ctx.lineWidth = w
+        ctx.stroke()
+    };
+
+    const drawLine = (x1, y1, x2, y2, color, w) => {
+        ctx.beginPath()
+        ctx.moveTo(x1, y1)
+        ctx.lineTo(x2, y2)
+        ctx.strokeStyle = color
+        ctx.lineWidth = w
+        ctx.stroke()
+    };
+
+    const drawDot = (x, y, color, r) => {
+        ctx.beginPath()
+        ctx.arc(x, y, r, 0, Math.PI * 2)
+        ctx.fillStyle = color
+        ctx.fill()
+    };
+
+    const renderCtx = () => {
+        ctx.clearRect(0, 0, screenCanvas.width, screenCanvas.height);
+
+        const centerX = screenCanvas.width / 2;
+        const centerY = screenCanvas.height / 2;
+
+        if (abInfo.showing) {
+            drawCircle(centerX, centerY, abInfo.radius || 0, `rgba(255, 255, 255, ${abInfo.radiusOpacity || 1})`, 1);
+        };
+
+        if (abInfo.target) {
+            const { x, y } = abInfo.target;
+            const opacity = abInfo.targetOpacity || 1;
+            drawLine(centerX, centerY, x, y, `rgba(255,255,255, ${opacity})`, 1);
+            drawDot(x, y, `rgba(255, 255, 255, ${opacity})`, 2);
+        };
+
+        requestAnimationFrame(renderCtx);
+    };
+
+    requestAnimationFrame(renderCtx);
+    
+    window.ctxAimbot = {
+        showInfo(targetOpacity, radius, radiusOpacity) {
+            abInfo.targetOpacity = targetOpacity;
+            abInfo.radius = radius;
+            abInfo.radiusOpacity = radiusOpacity;
+            abInfo.showing = true;
+        },
+        
+        hideInfo() {
+            abInfo.showing = false;
+        },
+        
+        setInfo(target, targetOpacity, radius, radiusOpacity) {
+            abInfo.target = target;
+            abInfo.targetOpacity = targetOpacity;
+            abInfo.radius = radius;
+            abInfo.radiusOpacity = radiusOpacity;
+        }
+    };
+
+    window.text3d = (function () {
+        const layer = document.createElement('div');
+        layer.id = 'text3d-layer';
+        layer.style.cssText = 'position:fixed;left:0;top:0;right:0;bottom:0;width:100%;height:100%;pointer-events:none;overflow:hidden;z-index:9998;';
+        document.body.appendChild(layer);
+
+        const els = new Map();
+
+        const palette = {
+            r: '#c0392b', g: '#27ae60', b: '#2980b9', y: '#f1c40f',
+            o: '#e67e22', p: '#8e44ad', c: '#16a085', w: '#ffffff',
+            h: '#95a5a6', d: '#7f8c8d'
+        };
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function toHtml(text, accent) {
+            const parts = String(text).split(/(~[a-z]~)/i);
+            let color = '#ffffff';
+            let html = '';
+
+            for (const part of parts) {
+                if (!part) continue;
+
+                const tag = part.match(/^~([a-z])~$/i);
+
+                if (tag) {
+                    const key = tag[1].toLowerCase();
+                    color = (key === 's' || key === 'm') ? (accent || '#ffffff') : (palette[key] || color);
+                    continue;
+                }
+
+                html += `<span style="color:${color}">${escapeHtml(part)}</span>`;
+            }
+
+            return html;
+        }
+
+        function render(items) {
+            const list = Array.isArray(items) ? items : Object.values(items || {});
+            const alive = new Set();
+
+            for (const it of list) {
+                if (!it || it.id == null) continue;
+
+                const id = String(it.id);
+                alive.add(id);
+
+                let el = els.get(id);
+
+                if (!el) {
+                    el = document.createElement('div');
+                    el.className = 'text3d-item';
+                    el.style.cssText = 'position:absolute;white-space:nowrap;font-family:Poppins,sans-serif;font-weight:600;letter-spacing:0.02vh;text-align:center;transform:translate(-50%,-50%);text-shadow:0 0.1vh 0.2vh rgba(0,0,0,0.95),0 0 0.35vh rgba(0,0,0,0.85);';
+                    layer.appendChild(el);
+                    els.set(id, el);
+                }
+
+                const scale = Math.max(0.75, Math.min(6, (Number(it.scale) || 0.5) * 3.2));
+
+                el.innerHTML = toHtml(it.text || '', it.color);
+                el.style.left = ((Number(it.x) || 0) * 100) + 'vw';
+                el.style.top = ((Number(it.y) || 0) * 100) + 'vh';
+                el.style.fontSize = scale + 'vh';
+                el.style.opacity = it.opacity == null ? '1' : String(it.opacity);
+            }
+
+            for (const [id, el] of els) {
+                if (!alive.has(id)) {
+                    el.remove();
+                    els.delete(id);
+                }
+            }
+        }
+
+        function clear() {
+            for (const [, el] of els) el.remove();
+            els.clear();
+        }
+
+        return { render, clear };
+    })();
+
+    window.esp = (function () {
+        const canvas = document.createElement('canvas');
+        canvas.id = 'esp-canvas';
+        canvas.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9997;';
+        document.body.appendChild(canvas);
+
+        const g = canvas.getContext('2d', { desynchronized: true });
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        resize();
+        window.addEventListener('resize', resize);
+
+        const DEFAULT_OPTS = { box: true, health: true, armor: true, skeleton: true, name: true, distance: true, snapline: false, thickness: 2 };
+
+        let state = {
+            opts: Object.assign({}, DEFAULT_OPTS),
+            list: [],
+            npcs: [],
+            t: 0
+        };
+
+        // per-entity smoothed render state, keyed by id
+        const tracks = new Map();
+        let lastFrameTime = performance.now();
+
+        function clamp01(v) {
+            return v < 0 ? 0 : (v > 1 ? 1 : v);
+        }
+
+        function healthColor(hp) {
+            hp = clamp01(hp);
+
+            let r, gg, b;
+
+            if (hp > 0.5) {
+                const t = (hp - 0.5) * 2;
+                r = Math.round(241 + (39 - 241) * t);
+                gg = Math.round(196 + (174 - 196) * t);
+                b = Math.round(15 + (96 - 15) * t);
+            } else {
+                const t = hp * 2;
+                r = Math.round(192 + (241 - 192) * t);
+                gg = Math.round(57 + (196 - 57) * t);
+                b = Math.round(43 + (15 - 43) * t);
+            }
+
+            return `rgb(${r},${gg},${b})`;
+        }
+
+        function drawCorners(x, y, w, h, len, color, lw) {
+            g.strokeStyle = color;
+            g.lineWidth = lw;
+            g.lineCap = 'round';
+            g.beginPath();
+
+            g.moveTo(x, y + len); g.lineTo(x, y); g.lineTo(x + len, y);
+            g.moveTo(x + w - len, y); g.lineTo(x + w, y); g.lineTo(x + w, y + len);
+            g.moveTo(x, y + h - len); g.lineTo(x, y + h); g.lineTo(x + len, y + h);
+            g.moveTo(x + w - len, y + h); g.lineTo(x + w, y + h); g.lineTo(x + w, y + h - len);
+
+            g.stroke();
+            g.lineCap = 'butt';
+        }
+
+        function drawBar(bx, by, bw, bh, frac, color) {
+            g.fillStyle = 'rgba(0,0,0,0.72)';
+            g.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
+            const fh = bh * clamp01(frac);
+            g.fillStyle = color;
+            g.fillRect(bx, by + (bh - fh), bw, fh);
+        }
+
+        function render() {
+            const now = performance.now();
+            let dt = (now - lastFrameTime) / 1000;
+            lastFrameTime = now;
+            if (!(dt > 0)) dt = 0.016;
+            if (dt > 0.1) dt = 0.1;
+
+            // health / armor fill ease only (position is snapped, never eased,
+            // so the box can't trail the player while the view is moving)
+            const barK = 1 - Math.exp(-10 * dt);
+
+            g.clearRect(0, 0, canvas.width, canvas.height);
+
+            if ((state.list.length || state.npcs.length) && now - state.t > 400) {
+                state.list = [];
+                state.npcs = [];
+            }
+
+            const W = canvas.width, H = canvas.height;
+            const o = state.opts || DEFAULT_OPTS;
+            const lwUnit = Math.max(1, Math.round(H / 1000));
+            const baseLw = lwUnit * (o.thickness || DEFAULT_OPTS.thickness);
+            const seen = new Set();
+
+            for (const it of state.list) {
+                if (!it || it.id == null) continue;
+
+                const id = String(it.id);
+                seen.add(id);
+
+                const tx = it.x, ty = it.y, tw = it.w, th = it.h;
+                const thp = it.hp == null ? null : clamp01(it.hp);
+                const tar = it.ar == null ? null : clamp01(it.ar);
+
+                let tr = tracks.get(id);
+
+                if (!tr) {
+                    tr = { x: tx, y: ty, w: tw, h: th, hp: thp || 0, ar: tar || 0, a: 0 };
+                    tracks.set(id, tr);
+                } else {
+                    // snap straight onto the target every frame so the box stays
+                    // locked to the player when moving / turning; the only filtering
+                    // is a ~0.5px deadzone to stop stationary projection shimmer
+                    const dzx = 0.5 / W, dzy = 0.5 / H;
+
+                    if (Math.abs(tx - tr.x) > dzx) tr.x = tx;
+                    if (Math.abs(ty - tr.y) > dzy) tr.y = ty;
+                    if (Math.abs(tw - tr.w) > dzx) tr.w = tw;
+                    if (Math.abs(th - tr.h) > dzy) tr.h = th;
+
+                    if (thp != null) tr.hp += (thp - tr.hp) * barK;
+                    if (tar != null) tr.ar += (tar - tr.ar) * barK;
+                }
+
+                tr.a += (1 - tr.a) * (1 - Math.exp(-12 * dt));
+                tr.seenAt = now;
+
+                const alpha = clamp01(tr.a);
+                const x = tr.x * W;
+                const y = tr.y * H;
+                const w = Math.max(6, tr.w * W);
+                const h = Math.max(10, tr.h * H);
+                const accent = it.color || '#ffffff';
+                const cornerLen = Math.max(4, Math.min(w, h) * 0.28);
+
+                g.globalAlpha = alpha;
+
+                if (o.snapline) {
+                    g.strokeStyle = accent;
+                    g.lineWidth = baseLw;
+                    g.globalAlpha = alpha * 0.45;
+                    g.beginPath();
+                    g.moveTo(W / 2, H);
+                    g.lineTo(x + w / 2, y + h);
+                    g.stroke();
+                    g.globalAlpha = alpha;
+                }
+
+                if (o.skeleton && it.b && it.b.length >= 4) {
+                    g.strokeStyle = 'rgba(0,0,0,0.55)';
+                    g.lineWidth = baseLw + 1.5;
+                    g.beginPath();
+                    for (let i = 0; i + 3 < it.b.length; i += 4) {
+                        g.moveTo(it.b[i] * W, it.b[i + 1] * H);
+                        g.lineTo(it.b[i + 2] * W, it.b[i + 3] * H);
+                    }
+                    g.stroke();
+
+                    g.strokeStyle = accent;
+                    g.lineWidth = baseLw;
+                    g.beginPath();
+                    for (let i = 0; i + 3 < it.b.length; i += 4) {
+                        g.moveTo(it.b[i] * W, it.b[i + 1] * H);
+                        g.lineTo(it.b[i + 2] * W, it.b[i + 3] * H);
+                    }
+                    g.stroke();
+                }
+
+                if (o.box) {
+                    drawCorners(x, y, w, h, cornerLen, 'rgba(0,0,0,0.6)', baseLw + 2);
+                    drawCorners(x, y, w, h, cornerLen, accent, baseLw);
+                }
+
+                const barW = Math.max(3, baseLw + 2);
+                let barEdge = x - 3;
+
+                if (o.health && thp != null) {
+                    drawBar(barEdge - barW, y, barW, h, tr.hp, healthColor(tr.hp));
+                    barEdge -= barW + 2;
+                }
+
+                if (o.armor && tar != null) {
+                    drawBar(barEdge - barW, y, barW, h, tr.ar, 'rgb(64,156,255)');
+                    barEdge -= barW + 2;
+                }
+
+                g.textAlign = 'center';
+                g.textBaseline = 'alphabetic';
+                g.shadowColor = 'rgba(0,0,0,0.9)';
+                g.shadowBlur = 3;
+
+                if (o.name && it.name) {
+                    const fs = Math.max(9, Math.round(H / 95));
+                    g.font = `600 ${fs}px Poppins, sans-serif`;
+                    g.fillStyle = accent;
+                    g.fillText(it.name, x + w / 2, y - fs * 0.5);
+                }
+
+                if (o.distance && it.dist != null) {
+                    const fs = Math.max(8, Math.round(H / 105));
+                    g.font = `500 ${fs}px Poppins, sans-serif`;
+                    g.fillStyle = '#ffffff';
+                    g.fillText(Math.round(it.dist) + 'm', x + w / 2, y + h + fs + 2);
+                }
+
+                g.shadowBlur = 0;
+                g.globalAlpha = 1;
+            }
+
+            // NPCs: drawn as a plain line + optional skeleton in a fixed
+            // classification color (no box/bars/name) - lightweight since
+            // there can be a lot of them, and no per-id smoothing needed
+            // since the underlying projection is already the stable line.
+            for (const np of state.npcs) {
+                if (!np) continue;
+
+                const color = np.color || '#ffffff';
+
+                if (np.lx != null) {
+                    g.strokeStyle = 'rgba(0,0,0,0.6)';
+                    g.lineWidth = baseLw + 1.5;
+                    g.beginPath();
+                    g.moveTo(np.lx * W, np.ly * H);
+                    g.lineTo(np.lx2 * W, np.ly2 * H);
+                    g.stroke();
+
+                    g.strokeStyle = color;
+                    g.lineWidth = baseLw;
+                    g.beginPath();
+                    g.moveTo(np.lx * W, np.ly * H);
+                    g.lineTo(np.lx2 * W, np.ly2 * H);
+                    g.stroke();
+                }
+
+                if (np.b && np.b.length >= 4) {
+                    g.strokeStyle = 'rgba(0,0,0,0.55)';
+                    g.lineWidth = baseLw + 1.5;
+                    g.beginPath();
+                    for (let i = 0; i + 3 < np.b.length; i += 4) {
+                        g.moveTo(np.b[i] * W, np.b[i + 1] * H);
+                        g.lineTo(np.b[i + 2] * W, np.b[i + 3] * H);
+                    }
+                    g.stroke();
+
+                    g.strokeStyle = color;
+                    g.lineWidth = baseLw;
+                    g.beginPath();
+                    for (let i = 0; i + 3 < np.b.length; i += 4) {
+                        g.moveTo(np.b[i] * W, np.b[i + 1] * H);
+                        g.lineTo(np.b[i + 2] * W, np.b[i + 3] * H);
+                    }
+                    g.stroke();
+                }
+            }
+
+            for (const [id, tr] of tracks) {
+                if (!seen.has(id) && now - (tr.seenAt || 0) > 500) tracks.delete(id);
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        requestAnimationFrame(render);
+
+        return {
+            update(payload) {
+                if (!payload) {
+                    state.list = [];
+                    state.npcs = [];
+                    return;
+                }
+
+                if (payload.opts) state.opts = Object.assign({}, DEFAULT_OPTS, payload.opts);
+                state.list = Array.isArray(payload.list) ? payload.list : [];
+                state.npcs = Array.isArray(payload.npcs) ? payload.npcs : [];
+                state.t = performance.now();
+            },
+
+            setOptions(opts) {
+                if (opts) state.opts = Object.assign({}, state.opts, opts);
+            },
+
+            clear() {
+                state.list = [];
+                state.npcs = [];
+                tracks.clear();
+            }
+        };
+    })();
+
+/* ---- Shark DUI bridge (loaded via SharkAPI.Nui.CreateDui, driven by SendDuiMessage) ---- */
+/* No auto-buildMenu — page boots invisible. Lua drives everything via SendDuiMessage. */
+(function () {
+    /* Banner fallback: if mayhemmenu.com image is down, replace with a gradient */
+    function fixBanner() {
+        var b = document.getElementById('banner-image');
+        if (b) {
+            b.onerror = function () {
+                this.style.display = 'none';
+                var p = this.parentElement;
+                if (p) p.style.background = 'linear-gradient(135deg, rgba(28,209,82,0.25) 0%, rgba(11,11,15,0.9) 100%)';
+            };
+            /* re-trigger load check in case it already failed before this ran */
+            if (b.complete && b.naturalWidth === 0) b.onerror();
+        }
+    }
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', fixBanner); }
+    else { fixBanner(); }
+
+    /* lua drives the UI the Static way: SharkAPI.Nui.SendDuiMessage(handle, { type='...', ... }) */
+    window.addEventListener('message', function (ev) {
+        var d = ev && ev.data; if (!d || typeof d !== 'object') return;
+        try {
+            switch (d.type) {
+                case 'buildMenu':      if (window.buildMenu)        window.buildMenu(d.config || {}); break;
+                case 'updateMenuData': if (window.updateMenuData)   window.updateMenuData(d.data || {}); break;
+                case 'updateTab':      if (window.updateTab)        window.updateTab(d.index != null ? d.index : 0); break;
+                case 'showMenu':       if (window.showMenu)         window.showMenu(); break;
+                case 'hideMenu':       if (window.hideMenu)         window.hideMenu(); break;
+                case 'watermark':      if (window.showWatermark)    window.showWatermark(); break;
+                case 'updateBanner':   if (window.updateMenuBanner) window.updateMenuBanner(d); break;
+                case 'updateSelection':if (window.updateSelection)  window.updateSelection(d.index != null ? d.index : 0); break;
+                case 'notify':
+                case 'notification':   if (window.showNotification) window.showNotification(d.setType || '', d.header || '', d.message || '', d.duration || 5000); break;
+            }
+        } catch (e) {}
+    });
+})();
+
+</script></body></html>
